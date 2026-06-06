@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+src-tauri/gen/android/app/build/
+src-tauri/target/
+
+# Tauri
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/captures/
+x
+# Gradle
+src-tauri/gen/android/.gradle/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# os
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+
+# Screenshots (uncomment when ready)
+# docs/screenshots/
+
+# Temp
+.tmp/
+*.tmp
+nul
+.backup/
+
+# Signing keys — NEVER commit
+*.keystore
+*.jks
+
+# Termux bootstrap — download before building (30MB)
+# See docs/how-to-install.md
+src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip
