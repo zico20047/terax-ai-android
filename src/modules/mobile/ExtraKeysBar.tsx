@@ -188,16 +188,15 @@ export function ExtraKeysBar({
         <KeyButton label="ESC" onClick={() => handleDirectKey("\x1b")} />
         <KeyButton label="TAB" onClick={() => handleDirectKey("\t")} />
         <Divider />
+        <KeyButton label="&#8592;" onClick={() => handleDirectKey("\x1b[D")} />
         <KeyButton label="&#8593;" onClick={() => handleDirectKey("\x1b[A")} />
         <KeyButton label="&#8595;" onClick={() => handleDirectKey("\x1b[B")} />
         <KeyButton label="&#8594;" onClick={() => handleDirectKey("\x1b[C")} />
-        <KeyButton label="&#8592;" onClick={() => handleDirectKey("\x1b[D")} />
         <Divider />
         <KeyButton label="-" onClick={() => handleDirectKey("-")} />
         <KeyButton label="/" onClick={() => handleDirectKey("/")} />
         <KeyButton label="|" onClick={() => handleDirectKey("|")} />
         <KeyButton label="~" onClick={() => handleDirectKey("~")} />
-        <KeyButton label="&amp;" onClick={() => handleDirectKey("&")} />
       </div>
     </>
   );

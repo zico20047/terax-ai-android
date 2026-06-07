@@ -2,10 +2,14 @@ package app.crynta.terax
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import kotlin.math.max
 
 class MainActivity : TauriActivity() {
   companion object {
@@ -18,6 +22,16 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+
+    // Handle IME (keyboard) insets — pad the root view so the WebView
+    // shrinks when the soft keyboard opens, keeping content visible.
+    val rootView = findViewById<View>(android.R.id.content)
+    ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+      val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      v.setPadding(0, 0, 0, max(bars.bottom, ime.bottom))
+      insets
+    }
 
     // Add JS interface so JS can synchronously set the back-consumed flag.
     // Use a delayed post to ensure the WebView is fully created.

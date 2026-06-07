@@ -16,3 +16,4 @@ export {
 } from "./TabletSideRail";
 export { useTerminalTouch } from "./useTerminalTouch";
 export { ExtraKeysBar, EXTRA_KEYS_HEIGHT } from "./ExtraKeysBar";
+export { TerminalTextOverlay } from "./TerminalTextOverlay";

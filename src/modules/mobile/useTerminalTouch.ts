@@ -9,6 +9,7 @@ type TouchPosition = { x: number; y: number };
 export function useTerminalTouch(
   terminalRef: React.RefObject<HTMLElement | null>,
   disabled = false,
+  onLongPress?: () => void,
 ) {
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
@@ -41,17 +42,8 @@ export function useTerminalTouch(
       isScrolling = false;
 
       longPressTimer = setTimeout(() => {
-        if (!isScrolling) {
-          const target = el.querySelector("canvas");
-          if (target) {
-            const ctxEvent = new MouseEvent("contextmenu", {
-              bubbles: true,
-              cancelable: true,
-              clientX: touch.clientX,
-              clientY: touch.clientY,
-            });
-            target.dispatchEvent(ctxEvent);
-          }
+        if (!isScrolling && onLongPress) {
+          onLongPress();
         }
       }, LONG_PRESS_DURATION);
     };
@@ -112,5 +104,5 @@ export function useTerminalTouch(
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };
-  }, [terminalRef, handleContextMenu, disabled]);
+  }, [terminalRef, handleContextMenu, disabled, onLongPress]);
 }
