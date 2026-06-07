@@ -226,6 +226,11 @@ html[data-chrome="borderless"] #settings-root {
   outline: none !important;
 }
 
+/* Disable browser touch handling on terminal — we handle it in JS */
+.xterm-screen {
+  touch-action: none !important;
+}
+
 .cm-editor,
 .cm-scroller {
   scrollbar-width: none !important;

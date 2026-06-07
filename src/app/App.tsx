@@ -86,6 +86,7 @@ import {
   type MobileNavTab,
 } from "@/modules/mobile";
 import { useBreakpoint } from "@/lib/use-mobile";
+import { useTerminalTouch } from "@/modules/mobile";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
 import { addBackHandlerImmediate } from "@/lib/useBackHandler";
@@ -220,6 +221,7 @@ export default function App() {
     useState<SearchAddon | null>(null);
   const searchInlineRef = useRef<SearchInlineHandle | null>(null);
   const terminalRefs = useRef<Map<number, TerminalPaneHandle>>(new Map());
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
   const editorRefs = useRef<Map<number, EditorPaneHandle>>(new Map());
   const previewRefs = useRef<Map<number, PreviewPaneHandle>>(new Map());
   const [activeEditorHandle, setActiveEditorHandle] =
@@ -231,6 +233,7 @@ export default function App() {
   const explorerReturnFocusRef = useRef<HTMLElement | null>(null);
   const breakpoint = useBreakpoint();
   const isPhone = breakpoint === "phone";
+  useTerminalTouch(terminalContainerRef);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
 
@@ -1344,8 +1347,10 @@ export default function App() {
   const workspaceSurface = (
     <div className="relative h-full min-h-0">
       <div
+        ref={terminalContainerRef}
         className={cn(
-          "absolute inset-0 px-3 pt-2 pb-2",
+          "absolute inset-0 pt-2 pb-2",
+          isPhone ? "px-1" : "px-3",
           !isTerminalTab && "invisible pointer-events-none",
         )}
         aria-hidden={!isTerminalTab}

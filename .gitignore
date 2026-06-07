@@ -1,7 +1,10 @@
 # Dependencies
-node_modules/
+node_modules
 
-# Build output
+dist
+dist-ssr
+*.local
+stats.html
 dist/
 src-tauri/gen/android/app/build/
 src-tauri/target/
@@ -27,6 +30,16 @@ src-tauri/gen/android/.gradle/
 .DS_Store
 Thumbs.db
 desktop.ini
+*.keystore
+*.jks
+.vscode/*
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # env
 .env
@@ -34,8 +47,13 @@ desktop.ini
 !.env.example
 
 # logs
+*.logs
 *.log
-
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 # Screenshots (uncomment when ready)
 # docs/screenshots/
 
@@ -45,10 +63,9 @@ desktop.ini
 nul
 .backup/
 
-# Signing keys — NEVER commit
-*.keystore
-*.jks
+# Signing keys — NEVER commit 
 
+*.tsbuildinfo
 # Termux bootstrap — download before building (30MB)
 # See docs/how-to-install.md
 src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip

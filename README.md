@@ -26,7 +26,10 @@ A terminal app for Android tablets and phones with bash and apt package manager.
 ## Screenshots
 
 <p align="center">
-  <em>Screenshots coming soon</em>
+  <img src="docs/screenshots/tablet-terminal.jpg" width="600" alt="Terax terminal on tablet" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/phone-terminal.png" width="280" alt="Terax terminal on phone" />
 </p>
 
 <!-- Add screenshots here when ready:

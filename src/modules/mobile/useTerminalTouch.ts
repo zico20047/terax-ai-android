@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { scrollVisibleTerminal } from "@/modules/terminal/lib/rendererPool";
 
 const LONG_PRESS_DURATION = 500;
 const MOVE_THRESHOLD = 10;
@@ -16,53 +17,87 @@ export function useTerminalTouch(terminalRef: React.RefObject<HTMLElement | null
 
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let startPos: TouchPosition | null = null;
+    let lastY = 0;
+    let isScrolling = false;
 
     const onTouchStart = (e: TouchEvent) => {
+      // Stop xterm.js from handling this
+      e.stopPropagation();
+
       const touch = e.touches[0];
       startPos = { x: touch.clientX, y: touch.clientY };
+      lastY = touch.clientY;
+      isScrolling = false;
 
       longPressTimer = setTimeout(() => {
-        const target = el.querySelector("canvas");
-        if (target) {
-          const ctxEvent = new MouseEvent("contextmenu", {
-            bubbles: true,
-            cancelable: true,
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-          });
-          target.dispatchEvent(ctxEvent);
+        if (!isScrolling) {
+          const target = el.querySelector("canvas");
+          if (target) {
+            const ctxEvent = new MouseEvent("contextmenu", {
+              bubbles: true,
+              cancelable: true,
+              clientX: touch.clientX,
+              clientY: touch.clientY,
+            });
+            target.dispatchEvent(ctxEvent);
+          }
         }
       }, LONG_PRESS_DURATION);
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!startPos || !longPressTimer) return;
+      // Stop xterm.js from handling this
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!startPos) return;
       const touch = e.touches[0];
       const dx = Math.abs(touch.clientX - startPos.x);
       const dy = Math.abs(touch.clientY - startPos.y);
+
+      // Cancel long press on movement
       if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }
+
+      // Vertical drag = scroll terminal
+      if (dy > MOVE_THRESHOLD && dy > dx) {
+        isScrolling = true;
+        const deltaY = lastY - touch.clientY;
+        if (Math.abs(deltaY) >= 3) {
+          const lines = Math.round(deltaY / 6);
+          if (lines !== 0) {
+            scrollVisibleTerminal(lines);
+            lastY = touch.clientY;
+          }
+        }
       }
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: TouchEvent) => {
+      e.stopPropagation();
       if (longPressTimer) {
         clearTimeout(longPressTimer);
         longPressTimer = null;
       }
       startPos = null;
+      isScrolling = false;
     };
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    // capture: true = intercept BEFORE xterm.js
+    // passive: false = allow preventDefault
+    el.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
     el.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchstart", onTouchStart, { capture: true } as AddEventListenerOptions);
+      el.removeEventListener("touchmove", onTouchMove, { capture: true } as AddEventListenerOptions);
+      el.removeEventListener("touchend", onTouchEnd, { capture: true } as AddEventListenerOptions);
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };

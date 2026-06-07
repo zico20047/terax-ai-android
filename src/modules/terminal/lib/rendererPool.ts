@@ -678,6 +678,20 @@ export function getSlotForLeaf(leafId: number): Slot | null {
   return slots.find((s) => s.currentLeafId === leafId) ?? null;
 }
 
+/**
+ * Scroll the visible terminal by a number of lines.
+ * Negative = scroll up, positive = scroll down.
+ */
+export function scrollVisibleTerminal(lines: number): void {
+  for (const slot of slots) {
+    const host = slot.host;
+    if (!host || !host.parentElement) continue;
+    if (host.style.visibility === "hidden") continue;
+    slot.term.scrollLines(lines);
+    return;
+  }
+}
+
 const IS_MAC =
   typeof navigator !== "undefined" &&
   /Mac|iPhone|iPad/.test(navigator.userAgent);

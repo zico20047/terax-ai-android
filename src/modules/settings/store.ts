@@ -127,7 +127,8 @@ const KEY_ZOOM_LEVEL = "zoomLevel";
 const KEY_AGENT_NOTIFICATIONS = "agentNotifications";
 const KEY_SHORTCUTS = "shortcuts";
 
-export const TERMINAL_FONT_SIZE_DEFAULT = 14;
+export const TERMINAL_FONT_SIZE_DEFAULT =
+  typeof window !== "undefined" && window.innerWidth <= 639 ? 10 : 14;
 export const TERMINAL_FONT_SIZE_MIN = 8;
 export const TERMINAL_FONT_SIZE_MAX = 32;
 
