@@ -6,46 +6,6 @@ const MOVE_THRESHOLD = 10;
 
 type TouchPosition = { x: number; y: number };
 
-/**
- * Convert client coordinates to terminal row/col (buffer coordinates).
- * Returns null if outside the terminal area.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _clientToBufferCell(
-  el: HTMLElement,
-  clientX: number,
-  clientY: number,
-): { col: number; row: number } | null {
-  const slot = findSlotForElement(el);
-  if (!slot) return null;
-  const rect = slot.host.getBoundingClientRect();
-  const cellW = rect.width / slot.term.cols;
-  const cellH = rect.height / slot.term.rows;
-  const col = Math.floor((clientX - rect.left) / cellW);
-  const viewportRow = Math.floor((clientY - rect.top) / cellH);
-  if (col < 0 || col >= slot.term.cols || viewportRow < 0 || viewportRow >= slot.term.rows) {
-    return null;
-  }
-  // Convert viewport row to buffer row (account for scrollback)
-  const bufferRow = viewportRow + slot.term.buffer.active.viewportY;
-  return { col, row: bufferRow };
-}
-
-function findSlotForElement(el: HTMLElement) {
-  // Walk up to find the terminal container, then find the slot
-  const container = el.closest("[data-terax-slot]") as HTMLElement | null;
-  if (container) {
-    const id = Number(container.getAttribute("data-terax-slot"));
-    const slots = (window as unknown as { __teraxSlots?: Map<number, unknown> }).__teraxSlots;
-    if (slots?.has(id)) return slots.get(id) as { host: HTMLElement; term: { cols: number; rows: number; select: (c: number, r: number, l: number) => void; buffer: { active: { viewportY: number } } } };
-  }
-  // Fallback: search by querying the element tree
-  const slotEl = el.querySelector("[data-terax-slot]") ?? el.closest("[data-terax-slot]");
-  if (!slotEl) return null;
-  // Use the global slot registry from rendererPool
-  return null;
-}
-
 export function useTerminalTouch(
   terminalRef: React.RefObject<HTMLElement | null>,
   selectionMode = false,
