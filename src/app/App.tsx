@@ -235,7 +235,8 @@ export default function App() {
   const explorerReturnFocusRef = useRef<HTMLElement | null>(null);
   const breakpoint = useBreakpoint();
   const isPhone = breakpoint === "phone";
-  useTerminalTouch(terminalContainerRef);
+  const [selectionMode, setSelectionMode] = useState(false);
+  useTerminalTouch(terminalContainerRef, selectionMode);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
 
@@ -536,6 +537,13 @@ export default function App() {
       isTerminalTab &&
       (!isPhone || mobileNavTab === "terminal"),
   );
+
+  // Auto-disable selection mode when leaving terminal
+  useEffect(() => {
+    if (!isTerminalTab || (isPhone && mobileNavTab !== "terminal")) {
+      setSelectionMode(false);
+    }
+  }, [isTerminalTab, isPhone, mobileNavTab]);
   const isGitHistoryTab = activeTab?.kind === "git-history";
 
   // When an AI diff is approved (write_file applied to disk), reload any
@@ -1594,6 +1602,8 @@ export default function App() {
             <ExtraKeysBar
               activeLeafId={activeLeafId}
               visible={mobileNavTab === "terminal" && isTerminalTab}
+              selectionMode={selectionMode}
+              onToggleSelectionMode={() => setSelectionMode((s) => !s)}
             />
           )}
 

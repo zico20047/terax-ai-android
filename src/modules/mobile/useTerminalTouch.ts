@@ -6,7 +6,10 @@ const MOVE_THRESHOLD = 10;
 
 type TouchPosition = { x: number; y: number };
 
-export function useTerminalTouch(terminalRef: React.RefObject<HTMLElement | null>) {
+export function useTerminalTouch(
+  terminalRef: React.RefObject<HTMLElement | null>,
+  disabled = false,
+) {
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
   }, []);
@@ -14,6 +17,14 @@ export function useTerminalTouch(terminalRef: React.RefObject<HTMLElement | null
   useEffect(() => {
     const el = terminalRef.current;
     if (!el) return;
+
+    // When disabled, let xterm.js handle touch events natively (for selection)
+    if (disabled) {
+      el.addEventListener("contextmenu", handleContextMenu);
+      return () => {
+        el.removeEventListener("contextmenu", handleContextMenu);
+      };
+    }
 
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let startPos: TouchPosition | null = null;
@@ -101,5 +112,5 @@ export function useTerminalTouch(terminalRef: React.RefObject<HTMLElement | null
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };
-  }, [terminalRef, handleContextMenu]);
+  }, [terminalRef, handleContextMenu, disabled]);
 }
