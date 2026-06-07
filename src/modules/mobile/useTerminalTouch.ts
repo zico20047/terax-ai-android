@@ -10,7 +10,8 @@ type TouchPosition = { x: number; y: number };
  * Convert client coordinates to terminal row/col (buffer coordinates).
  * Returns null if outside the terminal area.
  */
-function clientToBufferCell(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _clientToBufferCell(
   el: HTMLElement,
   clientX: number,
   clientY: number,
@@ -127,14 +128,12 @@ export function useTerminalTouch(
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let startPos: TouchPosition | null = null;
     let lastY = 0;
-    let isScrolling = false;
 
     const onTouchStart = (e: TouchEvent) => {
       e.stopPropagation();
       const touch = e.touches[0];
       startPos = { x: touch.clientX, y: touch.clientY };
       lastY = touch.clientY;
-      isScrolling = false;
       longPressTimer = setTimeout(() => {
         // Long press — no action in normal mode
       }, 500);
@@ -151,7 +150,6 @@ export function useTerminalTouch(
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
       }
       if (dy > MOVE_THRESHOLD && dy > dx) {
-        isScrolling = true;
         const deltaY = lastY - touch.clientY;
         if (Math.abs(deltaY) >= 3) {
           const lines = Math.round(deltaY / 6);
@@ -164,7 +162,6 @@ export function useTerminalTouch(
       e.stopPropagation();
       if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
       startPos = null;
-      isScrolling = false;
     };
 
     el.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
