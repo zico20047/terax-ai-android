@@ -1368,12 +1368,12 @@ export default function App() {
         ref={terminalContainerRef}
         className={cn(
           "absolute inset-0 pt-2 pb-2",
-          isPhone ? "px-1" : "px-3",
+          IS_MOBILE ? "px-1" : "px-3",
           !isTerminalTab && "invisible pointer-events-none",
         )}
         aria-hidden={!isTerminalTab}
       >
-        {isPhone ? (
+        {IS_MOBILE ? (
           <WtermTerminalStack
             tabs={tabs}
             activeId={activeId}
@@ -1608,10 +1608,10 @@ export default function App() {
             )}
           </main>
 
-          {isPhone && mobileNavTab === "terminal" && isTerminalTab && (
+          {IS_MOBILE && isTerminalTab && (!isPhone || mobileNavTab === "terminal") && (
             <ExtraKeysBar
               activeLeafId={activeLeafId}
-              visible={mobileNavTab === "terminal" && isTerminalTab}
+              visible={isTerminalTab && (!isPhone || mobileNavTab === "terminal")}
               selectionMode={selectionMode}
               onToggleSelectionMode={() => setSelectionMode((s) => !s)}
             />
