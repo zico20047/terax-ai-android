@@ -93,19 +93,59 @@ export function ExtraKeysBar({
     }
   }, []);
 
-  // Intercept keydown when a modifier is active
+  // Intercept input when a modifier is active.
+  // On Android, soft keyboards use IME which fires `beforeinput` (NOT
+  // `keydown`). We listen on the document and check if the target is
+  // xterm's hidden textarea.
   useEffect(() => {
     if (modifiers.size === 0) return;
 
-    const handler = (e: KeyboardEvent) => {
+    const onBeforeInput = (e: InputEvent) => {
+      const mods = modifiersRef.current;
+      if (mods.size === 0) return;
+
+      // Only intercept text insertion into xterm's textarea
+      if (e.inputType !== "insertText") return;
+      const target = e.target as HTMLElement;
+      if (!target || !target.classList?.contains("xterm-helper-textarea")) {
+        return;
+      }
+
+      const char = e.data;
+      if (!char || char.length !== 1) return;
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      let data = "";
+      if (mods.has("alt")) data += "\x1b";
+      if (mods.has("ctrl")) {
+        data += String.fromCharCode(
+          char.toUpperCase().charCodeAt(0) & 0x1f,
+        );
+      } else {
+        data += char;
+      }
+
+      const leaf = leafRef.current;
+      if (leaf !== null) writeToSession(leaf, data);
+      clearModifiers();
+    };
+
+    // Also intercept keydown for hardware keyboards
+    const onKeyDown = (e: KeyboardEvent) => {
       const mods = modifiersRef.current;
       if (mods.size === 0) return;
       if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const target = e.target as HTMLElement;
+      if (!target || !target.classList?.contains("xterm-helper-textarea")) {
+        return;
+      }
       const key = e.key;
       if (key.length !== 1) return;
 
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
 
       let data = "";
       if (mods.has("alt")) data += "\x1b";
@@ -122,8 +162,12 @@ export function ExtraKeysBar({
       clearModifiers();
     };
 
-    window.addEventListener("keydown", handler, true);
-    return () => window.removeEventListener("keydown", handler, true);
+    document.addEventListener("beforeinput", onBeforeInput, true);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("beforeinput", onBeforeInput, true);
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
   }, [modifiers.size, clearModifiers]);
 
   // Auto-clear modifiers when bar becomes invisible
@@ -145,7 +189,6 @@ export function ExtraKeysBar({
 
   return (
     <>
-      {/* Floating selection toolbar */}
       {selectionMode && (
         <div
           className="pointer-events-auto absolute right-2 z-50 flex items-center gap-1 rounded-lg border bg-zinc-900/95 px-2 py-1.5 shadow-xl backdrop-blur"
@@ -160,7 +203,6 @@ export function ExtraKeysBar({
           <ActionBtn label="Done" onClick={onToggleSelectionMode} primary />
         </div>
       )}
-      {/* Keys bar */}
       <div
         className="flex items-center gap-1 overflow-x-auto border-t bg-zinc-950 px-1"
         style={{

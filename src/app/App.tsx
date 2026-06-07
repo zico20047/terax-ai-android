@@ -88,7 +88,6 @@ import {
 import { useBreakpoint } from "@/lib/use-mobile";
 import { useTerminalTouch } from "@/modules/mobile";
 import { ExtraKeysBar } from "@/modules/mobile";
-import { TerminalTextOverlay } from "@/modules/mobile";
 import { useWakeLock } from "@/lib/useWakeLock";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
@@ -237,8 +236,7 @@ export default function App() {
   const breakpoint = useBreakpoint();
   const isPhone = breakpoint === "phone";
   const [selectionMode, setSelectionMode] = useState(false);
-  const [showTextOverlay, setShowTextOverlay] = useState(false);
-  useTerminalTouch(terminalContainerRef, selectionMode, () => setShowTextOverlay(true));
+  useTerminalTouch(terminalContainerRef, selectionMode);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
 
@@ -1675,13 +1673,6 @@ export default function App() {
             onActivate={onActivateAgent}
           />
           <Toaster position="bottom-right" />
-
-          {showTextOverlay && (
-            <TerminalTextOverlay
-              leafId={activeLeafId}
-              onClose={() => setShowTextOverlay(false)}
-            />
-          )}
 
           {hasComposer ? (
             <>

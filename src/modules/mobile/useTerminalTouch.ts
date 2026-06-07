@@ -9,7 +9,6 @@ type TouchPosition = { x: number; y: number };
 export function useTerminalTouch(
   terminalRef: React.RefObject<HTMLElement | null>,
   disabled = false,
-  onLongPress?: () => void,
 ) {
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
@@ -19,7 +18,7 @@ export function useTerminalTouch(
     const el = terminalRef.current;
     if (!el) return;
 
-    // When disabled, let xterm.js handle touch events natively (for selection)
+    // When disabled (SEL mode), let xterm.js handle touch events natively
     if (disabled) {
       el.addEventListener("contextmenu", handleContextMenu);
       return () => {
@@ -33,7 +32,6 @@ export function useTerminalTouch(
     let isScrolling = false;
 
     const onTouchStart = (e: TouchEvent) => {
-      // Stop xterm.js from handling this
       e.stopPropagation();
 
       const touch = e.touches[0];
@@ -42,14 +40,13 @@ export function useTerminalTouch(
       isScrolling = false;
 
       longPressTimer = setTimeout(() => {
-        if (!isScrolling && onLongPress) {
-          onLongPress();
+        if (!isScrolling) {
+          // Long press — could trigger selection or context menu
         }
       }, LONG_PRESS_DURATION);
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      // Stop xterm.js from handling this
       e.preventDefault();
       e.stopPropagation();
 
@@ -58,7 +55,6 @@ export function useTerminalTouch(
       const dx = Math.abs(touch.clientX - startPos.x);
       const dy = Math.abs(touch.clientY - startPos.y);
 
-      // Cancel long press on movement
       if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
         if (longPressTimer) {
           clearTimeout(longPressTimer);
@@ -66,7 +62,6 @@ export function useTerminalTouch(
         }
       }
 
-      // Vertical drag = scroll terminal
       if (dy > MOVE_THRESHOLD && dy > dx) {
         isScrolling = true;
         const deltaY = lastY - touch.clientY;
@@ -90,8 +85,6 @@ export function useTerminalTouch(
       isScrolling = false;
     };
 
-    // capture: true = intercept BEFORE xterm.js
-    // passive: false = allow preventDefault
     el.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
     el.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
     el.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
@@ -104,5 +97,5 @@ export function useTerminalTouch(
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };
-  }, [terminalRef, handleContextMenu, disabled, onLongPress]);
+  }, [terminalRef, handleContextMenu, disabled]);
 }
