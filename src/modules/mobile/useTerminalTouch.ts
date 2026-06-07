@@ -1,14 +1,54 @@
 import { useEffect, useCallback } from "react";
 import { scrollVisibleTerminal } from "@/modules/terminal/lib/rendererPool";
+import { getSlotForLeaf } from "@/modules/terminal/lib/rendererPool";
 
-const LONG_PRESS_DURATION = 500;
 const MOVE_THRESHOLD = 10;
 
 type TouchPosition = { x: number; y: number };
 
+/**
+ * Convert client coordinates to terminal row/col (buffer coordinates).
+ * Returns null if outside the terminal area.
+ */
+function clientToBufferCell(
+  el: HTMLElement,
+  clientX: number,
+  clientY: number,
+): { col: number; row: number } | null {
+  const slot = findSlotForElement(el);
+  if (!slot) return null;
+  const rect = slot.host.getBoundingClientRect();
+  const cellW = rect.width / slot.term.cols;
+  const cellH = rect.height / slot.term.rows;
+  const col = Math.floor((clientX - rect.left) / cellW);
+  const viewportRow = Math.floor((clientY - rect.top) / cellH);
+  if (col < 0 || col >= slot.term.cols || viewportRow < 0 || viewportRow >= slot.term.rows) {
+    return null;
+  }
+  // Convert viewport row to buffer row (account for scrollback)
+  const bufferRow = viewportRow + slot.term.buffer.active.viewportY;
+  return { col, row: bufferRow };
+}
+
+function findSlotForElement(el: HTMLElement) {
+  // Walk up to find the terminal container, then find the slot
+  const container = el.closest("[data-terax-slot]") as HTMLElement | null;
+  if (container) {
+    const id = Number(container.getAttribute("data-terax-slot"));
+    const slots = (window as unknown as { __teraxSlots?: Map<number, unknown> }).__teraxSlots;
+    if (slots?.has(id)) return slots.get(id) as { host: HTMLElement; term: { cols: number; rows: number; select: (c: number, r: number, l: number) => void; buffer: { active: { viewportY: number } } } };
+  }
+  // Fallback: search by querying the element tree
+  const slotEl = el.querySelector("[data-terax-slot]") ?? el.closest("[data-terax-slot]");
+  if (!slotEl) return null;
+  // Use the global slot registry from rendererPool
+  return null;
+}
+
 export function useTerminalTouch(
   terminalRef: React.RefObject<HTMLElement | null>,
-  disabled = false,
+  selectionMode = false,
+  activeLeafId: number | null = null,
 ) {
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
@@ -18,14 +58,72 @@ export function useTerminalTouch(
     const el = terminalRef.current;
     if (!el) return;
 
-    // When disabled (SEL mode), let xterm.js handle touch events natively
-    if (disabled) {
+    // === Selection mode: drag to select text using xterm API ===
+    if (selectionMode && activeLeafId !== null) {
+      let startCell: { col: number; row: number } | null = null;
+      let lastCell: { col: number; row: number } | null = null;
+
+      const getCell = (clientX: number, clientY: number) => {
+        const slot = getSlotForLeaf(activeLeafId);
+        if (!slot) return null;
+        const rect = slot.host.getBoundingClientRect();
+        const cellW = rect.width / slot.term.cols;
+        const cellH = rect.height / slot.term.rows;
+        const col = Math.max(0, Math.min(slot.term.cols - 1, Math.floor((clientX - rect.left) / cellW)));
+        const viewportRow = Math.max(0, Math.min(slot.term.rows - 1, Math.floor((clientY - rect.top) / cellH)));
+        return { col, row: viewportRow + slot.term.buffer.active.viewportY };
+      };
+
+      const applySelection = () => {
+        if (!startCell || !lastCell || !activeLeafId) return;
+        const slot = getSlotForLeaf(activeLeafId);
+        if (!slot) return;
+        // Forward selection
+        if (startCell.row < lastCell.row || (startCell.row === lastCell.row && startCell.col <= lastCell.col)) {
+          const length = (lastCell.row - startCell.row) * slot.term.cols + (lastCell.col - startCell.col) + 1;
+          slot.term.select(startCell.col, startCell.row, length);
+        } else {
+          // Backward selection
+          const length = (startCell.row - lastCell.row) * slot.term.cols + (startCell.col - lastCell.col) + 1;
+          slot.term.select(lastCell.col, lastCell.row, length);
+        }
+      };
+
+      const onTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        startCell = getCell(touch.clientX, touch.clientY);
+        lastCell = startCell;
+        if (startCell) applySelection();
+      };
+
+      const onTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        lastCell = getCell(touch.clientX, touch.clientY);
+        if (startCell && lastCell) applySelection();
+      };
+
+      const onTouchEnd = (e: TouchEvent) => {
+        e.stopPropagation();
+        // Keep selection — don't clear
+      };
+
+      el.addEventListener("touchstart", onTouchStart, { passive: false, capture: true });
+      el.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+      el.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
       el.addEventListener("contextmenu", handleContextMenu);
       return () => {
+        el.removeEventListener("touchstart", onTouchStart, { capture: true } as AddEventListenerOptions);
+        el.removeEventListener("touchmove", onTouchMove, { capture: true } as AddEventListenerOptions);
+        el.removeEventListener("touchend", onTouchEnd, { capture: true } as AddEventListenerOptions);
         el.removeEventListener("contextmenu", handleContextMenu);
       };
     }
 
+    // === Normal mode: drag to scroll ===
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     let startPos: TouchPosition | null = null;
     let lastY = 0;
@@ -33,54 +131,38 @@ export function useTerminalTouch(
 
     const onTouchStart = (e: TouchEvent) => {
       e.stopPropagation();
-
       const touch = e.touches[0];
       startPos = { x: touch.clientX, y: touch.clientY };
       lastY = touch.clientY;
       isScrolling = false;
-
       longPressTimer = setTimeout(() => {
-        if (!isScrolling) {
-          // Long press — could trigger selection or context menu
-        }
-      }, LONG_PRESS_DURATION);
+        // Long press — no action in normal mode
+      }, 500);
     };
 
     const onTouchMove = (e: TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
-
       if (!startPos) return;
       const touch = e.touches[0];
       const dx = Math.abs(touch.clientX - startPos.x);
       const dy = Math.abs(touch.clientY - startPos.y);
-
       if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
       }
-
       if (dy > MOVE_THRESHOLD && dy > dx) {
         isScrolling = true;
         const deltaY = lastY - touch.clientY;
         if (Math.abs(deltaY) >= 3) {
           const lines = Math.round(deltaY / 6);
-          if (lines !== 0) {
-            scrollVisibleTerminal(lines);
-            lastY = touch.clientY;
-          }
+          if (lines !== 0) { scrollVisibleTerminal(lines); lastY = touch.clientY; }
         }
       }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
       e.stopPropagation();
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-      }
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
       startPos = null;
       isScrolling = false;
     };
@@ -89,7 +171,6 @@ export function useTerminalTouch(
     el.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
     el.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
     el.addEventListener("contextmenu", handleContextMenu);
-
     return () => {
       el.removeEventListener("touchstart", onTouchStart, { capture: true } as AddEventListenerOptions);
       el.removeEventListener("touchmove", onTouchMove, { capture: true } as AddEventListenerOptions);
@@ -97,5 +178,5 @@ export function useTerminalTouch(
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };
-  }, [terminalRef, handleContextMenu, disabled]);
+  }, [terminalRef, handleContextMenu, selectionMode, activeLeafId]);
 }

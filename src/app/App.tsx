@@ -105,6 +105,7 @@ import {
   leafIds,
   respawnSession,
   TerminalStack,
+  WtermTerminalStack,
   whenSessionReady,
   writeToSession,
   type TerminalPaneHandle,
@@ -1372,15 +1373,24 @@ export default function App() {
         )}
         aria-hidden={!isTerminalTab}
       >
-        <TerminalStack
-          tabs={tabs}
-          activeId={activeId}
-          registerHandle={registerTerminalHandle}
-          onSearchReady={handleSearchReady}
-          onCwd={handleTerminalCwd}
-          onExit={handleLeafExit}
-          onFocusLeaf={handleFocusLeaf}
-        />
+        {isPhone ? (
+          <WtermTerminalStack
+            tabs={tabs}
+            activeId={activeId}
+            registerHandle={registerTerminalHandle}
+            onExit={handleLeafExit}
+          />
+        ) : (
+          <TerminalStack
+            tabs={tabs}
+            activeId={activeId}
+            registerHandle={registerTerminalHandle}
+            onSearchReady={handleSearchReady}
+            onCwd={handleTerminalCwd}
+            onExit={handleLeafExit}
+            onFocusLeaf={handleFocusLeaf}
+          />
+        )}
       </div>
       <div
         className={cn(
