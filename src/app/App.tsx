@@ -237,7 +237,9 @@ export default function App() {
   const breakpoint = useBreakpoint();
   const isPhone = breakpoint === "phone";
   const [selectionMode, setSelectionMode] = useState(false);
-  useTerminalTouch(terminalContainerRef, selectionMode);
+  // useTerminalTouch only works with xterm.js (uses rendererPool slots).
+  // On mobile (wterm DOM renderer), touch is handled natively by the browser.
+  useTerminalTouch(terminalContainerRef, selectionMode, null, !IS_MOBILE);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
 

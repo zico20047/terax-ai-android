@@ -10,12 +10,14 @@ export function useTerminalTouch(
   terminalRef: React.RefObject<HTMLElement | null>,
   selectionMode = false,
   activeLeafId: number | null = null,
+  enabled = true,
 ) {
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     const el = terminalRef.current;
     if (!el) return;
 
@@ -135,5 +137,5 @@ export function useTerminalTouch(
       el.removeEventListener("contextmenu", handleContextMenu);
       if (longPressTimer) clearTimeout(longPressTimer);
     };
-  }, [terminalRef, handleContextMenu, selectionMode, activeLeafId]);
+  }, [terminalRef, handleContextMenu, selectionMode, activeLeafId, enabled]);
 }
