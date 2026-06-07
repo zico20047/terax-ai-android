@@ -15,3 +15,4 @@ export {
   TABLET_RAIL_WIDTH,
 } from "./TabletSideRail";
 export { useTerminalTouch } from "./useTerminalTouch";
+export { ExtraKeysBar, EXTRA_KEYS_HEIGHT } from "./ExtraKeysBar";

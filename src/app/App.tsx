@@ -87,6 +87,7 @@ import {
 } from "@/modules/mobile";
 import { useBreakpoint } from "@/lib/use-mobile";
 import { useTerminalTouch } from "@/modules/mobile";
+import { ExtraKeysBar } from "@/modules/mobile";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
 import { addBackHandlerImmediate } from "@/lib/useBackHandler";
@@ -1580,6 +1581,13 @@ export default function App() {
               </ResizablePanelGroup>
             )}
           </main>
+
+          {isPhone && mobileNavTab === "terminal" && isTerminalTab && (
+            <ExtraKeysBar
+              activeLeafId={activeLeafId}
+              visible={mobileNavTab === "terminal" && isTerminalTab}
+            />
+          )}
 
           {!isPhone ? (
             <StatusBar
