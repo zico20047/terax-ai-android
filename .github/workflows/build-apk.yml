@@ -52,6 +52,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        env:
+          PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS: "true"
 
       - name: Download Termux bootstrap
         run: |
