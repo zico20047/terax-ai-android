@@ -10,6 +10,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - rust_target: aarch64-linux-android
+            ndk_prefix: aarch64-linux-android
+            abi: arm64-v8a
+            bootstrap_arch: aarch64
+            apk_suffix: arm64
+          - rust_target: x86_64-linux-android
+            ndk_prefix: x86_64-linux-android
+            abi: x86_64
+            bootstrap_arch: x86_64
+            apk_suffix: x64
+          - rust_target: armv7-linux-androideabi
+            ndk_prefix: armv7a-linux-androideabi
+            abi: armeabi-v7a
+            bootstrap_arch: arm
+            apk_suffix: arm32
+          - rust_target: i686-linux-android
+            ndk_prefix: i686-linux-android
+            abi: x86
+            bootstrap_arch: x86
+            apk_suffix: x86
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +62,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: ${{ matrix.rust_target }}
 
       - name: Cache Cargo
         uses: actions/cache@v4
@@ -47,8 +71,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src-tauri/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-${{ runner.os }}-
+          key: cargo-${{ runner.os }}-${{ matrix.rust_target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-${{ matrix.rust_target }}-
 
       - name: Install dependencies
         run: pnpm install
@@ -58,36 +82,46 @@ jobs:
       - name: Download Termux bootstrap
         run: |
           mkdir -p src-tauri/gen/android/app/src/main/assets
-          mkdir -p src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
-          curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip \
-            https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-aarch64.zip
+          mkdir -p src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}
+          curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-${{ matrix.bootstrap_arch }}.zip \
+            https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-${{ matrix.bootstrap_arch }}.zip
 
       - name: Compile LD_PRELOAD library
         run: |
           TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
-          $TOOLCHAIN/aarch64-linux-android28-clang \
+          $TOOLCHAIN/${{ matrix.ndk_prefix }}28-clang \
             -shared -fPIC -O2 \
-            -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so \
+            -o src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}/libterax-path-translate.so \
             src-tauri/src/modules/path-translate/path-translate.c
 
       - name: Build APK
-        run: pnpm tauri android build --debug --apk --target aarch64
+        run: pnpm tauri android build --debug --apk --target ${{ matrix.rust_target }}
 
       - name: Rename APK
         run: |
           cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
-            terax-android-${{ github.ref_name || 'testing' }}.apk
+            terax-android-${{ github.ref_name || 'testing' }}-${{ matrix.apk_suffix }}.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: terax-android-apk
+          name: terax-android-${{ matrix.apk_suffix }}
           path: terax-android-*.apk
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
       - name: Create release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: terax-android-*.apk
+          files: artifacts/terax-android-*.apk
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, 'testing') || contains(github.ref_name, 'beta') }}

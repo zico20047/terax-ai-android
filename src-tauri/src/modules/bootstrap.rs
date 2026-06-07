@@ -14,8 +14,22 @@ const MARKER_VERSION: &str = "terax-android-bootstrap-termux-v15";
 
 // The Termux bootstrap zip is embedded at compile time.
 // It contains bash, coreutils, apt, dpkg, shared libs, etc.
+// The correct architecture-specific zip is selected via cfg(target_arch).
+#[cfg(target_arch = "aarch64")]
 const BOOTSTRAP_ZIP: &[u8] =
     include_bytes!("../../gen/android/app/src/main/assets/bootstrap-aarch64.zip");
+
+#[cfg(target_arch = "x86_64")]
+const BOOTSTRAP_ZIP: &[u8] =
+    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-x86_64.zip");
+
+#[cfg(target_arch = "arm")]
+const BOOTSTRAP_ZIP: &[u8] =
+    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-arm.zip");
+
+#[cfg(target_arch = "x86")]
+const BOOTSTRAP_ZIP: &[u8] =
+    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-x86.zip");
 
 /// The original Termux prefix path baked into all bootstrap binaries.
 /// ELF binaries keep this path — we translate at runtime via LD_PRELOAD.
@@ -919,7 +933,7 @@ fn find_native_lib_dir() -> Option<PathBuf> {
 
     // Method 2: Search /data/app/
     let pkg = "app.crynta.terax";
-    for arch in &["arm64", "arm64-v8a"] {
+    for arch in &["arm64", "arm64-v8a", "x86_64", "x86", "arm", "armeabi-v7a"] {
         if let Ok(entries) = fs::read_dir("/data/app") {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
