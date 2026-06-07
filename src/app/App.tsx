@@ -88,6 +88,7 @@ import {
 import { useBreakpoint } from "@/lib/use-mobile";
 import { useTerminalTouch } from "@/modules/mobile";
 import { ExtraKeysBar } from "@/modules/mobile";
+import { useWakeLock } from "@/lib/useWakeLock";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
 import { addBackHandlerImmediate } from "@/lib/useBackHandler";
@@ -528,6 +529,13 @@ export default function App() {
   const isAiDiffTab = activeTab?.kind === "ai-diff";
   const isGitDiffTab =
     activeTab?.kind === "git-diff" || activeTab?.kind === "git-commit-file";
+
+  // Keep screen on while terminal is visible on mobile
+  useWakeLock(
+    IS_MOBILE &&
+      isTerminalTab &&
+      (!isPhone || mobileNavTab === "terminal"),
+  );
   const isGitHistoryTab = activeTab?.kind === "git-history";
 
   // When an AI diff is approved (write_file applied to disk), reload any
