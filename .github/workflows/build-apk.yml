@@ -1,0 +1,95 @@
+name: Build APK
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;29.0.13846066
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Download Termux bootstrap
+        run: |
+          curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip \
+            https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-aarch64.zip
+
+      - name: Compile LD_PRELOAD library
+        run: |
+          NDK_PATH=$ANDROID_HOME/ndk/29.0.13846066
+          TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin
+          $TOOLCHAIN/aarch64-linux-android28-clang \
+            -shared -fPIC -O2 \
+            -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so \
+            src-tauri/src/modules/path-translate/path-translate.c
+
+      - name: Build APK
+        run: pnpm tauri android build --debug --apk --target aarch64
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/29.0.13846066
+
+      - name: Rename APK
+        run: |
+          cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
+            terax-android-${{ github.ref_name || 'testing' }}.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terax-android-apk
+          path: terax-android-*.apk
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: terax-android-*.apk
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, 'testing') || contains(github.ref_name, 'beta') }}
