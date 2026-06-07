@@ -20,13 +20,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-36
-            build-tools;36.0.0
-            ndk;29.0.13846066
+      - name: Setup Android NDK
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;29.0.13846066" || true
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -63,8 +62,7 @@ jobs:
 
       - name: Compile LD_PRELOAD library
         run: |
-          NDK_PATH=$ANDROID_HOME/ndk/29.0.13846066
-          TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin
+          TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
           $TOOLCHAIN/aarch64-linux-android28-clang \
             -shared -fPIC -O2 \
             -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so \
@@ -72,8 +70,6 @@ jobs:
 
       - name: Build APK
         run: pnpm tauri android build --debug --apk --target aarch64
-        env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/29.0.13846066
 
       - name: Rename APK
         run: |
