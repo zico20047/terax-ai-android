@@ -94,6 +94,10 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
     let rootfs = rootfs_dir();
     let marker = rootfs.join(MARKER);
 
+    log::info!("bootstrap: rootfs = {}", rootfs.display());
+    log::info!("bootstrap: prefix = {}", prefix_dir().display());
+    log::info!("bootstrap: embedded zip size = {} bytes", BOOTSTRAP_ZIP.len());
+
     let need_bootstrap = match fs::read_to_string(&marker) {
         Ok(v) => v.trim() != MARKER_VERSION, // marker exists but version mismatch → re-bootstrap
         Err(_) => true,                      // no marker → bootstrap
@@ -119,6 +123,7 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
 
         // Create top-level directories
         for dir in &[&rootfs, &home_dir(), &prefix_dir(), &tmp_dir()] {
+            log::info!("bootstrap: mkdir {}", dir.display());
             fs::create_dir_all(dir).map_err(|e| format!("mkdir {}: {e}", dir.display()))?;
         }
 
@@ -129,7 +134,9 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
         }
 
         // Extract the bootstrap archive
+        log::info!("bootstrap: starting extraction...");
         extract_bootstrap()?;
+        log::info!("bootstrap: extraction complete, bash exists = {}", bash_path().exists());
 
         // Create directories that apt/dpkg expect but bootstrap doesn't include
         for sub in &[

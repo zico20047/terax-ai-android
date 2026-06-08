@@ -134,32 +134,35 @@ pub mod pty {
         let OpenptyResult { master, slave } =
             unsafe { openpty(Some(&win), None) }.map_err(|e| format!("openpty: {e}"))?;
 
+        // Convert to raw fds BEFORE fork to avoid OwnedFd drop issues in child.
+        // Rust's IO Safety abort fires when OwnedFd::drop closes an already-closed fd,
+        // which can happen after fork() in multi-threaded apps.
+        let master_raw = master.into_raw_fd();
+        let slave_raw = slave.into_raw_fd();
+
         match unsafe { unistd::fork() }.map_err(|e| format!("fork: {e}"))? {
             ForkResult::Child => {
                 // ── Child process ─────────────────────────────────
-                // Close master in child first
-                drop(master);
+                // Close master in child
+                unsafe { libc::close(master_raw); }
 
                 // Create new session and set slave as controlling terminal
                 let _ = setsid();
 
                 // Set slave as controlling TTY (TIOCSCTTY)
-                let sfd = slave.as_raw_fd();
                 unsafe {
-                    libc::ioctl(sfd, libc::TIOCSCTTY as _, 0);
+                    libc::ioctl(slave_raw, libc::TIOCSCTTY as _, 0);
                 }
 
-                // Dup slave fd to stdin/stdout/stderr BEFORE closing the OwnedFd
+                // Dup slave fd to stdin/stdout/stderr
                 unsafe {
-                    libc::dup2(sfd, 0);
-                    libc::dup2(sfd, 1);
-                    libc::dup2(sfd, 2);
+                    libc::dup2(slave_raw, 0);
+                    libc::dup2(slave_raw, 1);
+                    libc::dup2(slave_raw, 2);
                 }
-
-                // Now close the original slave fd via drop (OwnedFd closes it).
-                // Do NOT call libc::close(sfd) again — that's a double-close
-                // which triggers Rust's IO Safety violation crash.
-                drop(slave);
+                if slave_raw > 2 {
+                    unsafe { libc::close(slave_raw); }
+                }
 
                 if let Some(ref dir) = cwd {
                     // Try the requested cwd, fall back to HOME on failure
@@ -215,12 +218,11 @@ pub mod pty {
                 unsafe { libc::_exit(1); }
             }
             ForkResult::Parent { child } => {
-                // Close slave in parent
-                drop(slave);
-                let master_fd = master.as_raw_fd();
+                // Close slave in parent (raw fd — no OwnedFd drop)
+                unsafe { libc::close(slave_raw); }
 
                 // Dup master fd for writer (separate file handle)
-                let writer_fd = unsafe { libc::dup(master_fd) };
+                let writer_fd = unsafe { libc::dup(master_raw) };
                 if writer_fd < 0 {
                     let _ = signal::kill(child, Signal::SIGKILL);
                     return Err("dup master fd failed".to_string());
@@ -234,9 +236,8 @@ pub mod pty {
                 ));
 
                 // ── Reader thread ─────────────────────────────────
-                // Convert OwnedFd to File for reading
-                let reader_fd = master.into_raw_fd();
-                let mut reader = unsafe { fs::File::from_raw_fd(reader_fd) };
+                // Convert raw fd to File for reading (takes ownership)
+                let mut reader = unsafe { fs::File::from_raw_fd(master_raw) };
 
                 let pending_r = pending.clone();
                 let done_r = done.clone();
