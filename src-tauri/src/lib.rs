@@ -6,6 +6,22 @@ use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 #[cfg(not(target_os = "android"))]
 use tauri_plugin_window_state::StateFlags;
 
+/// Global bootstrap status so frontend can poll if it missed the event.
+#[cfg(target_os = "android")]
+static BOOTSTRAP_DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn bootstrap_status() -> bool {
+    BOOTSTRAP_DONE.load(std::sync::atomic::Ordering::SeqCst)
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn bootstrap_status() -> bool {
+    true // always done on non-Android
+}
+
 /// Drained on first read so HMR / re-mounts can't replay the launch dir.
 #[derive(Default)]
 struct LaunchDir(Mutex<Option<String>>);
@@ -132,6 +148,7 @@ pub fn run() {
                     match modules::bootstrap::ensure_bootstrapped(Some(&handle)) {
                         Ok(_) => {
                             log::info!("bootstrap: complete, notifying frontend");
+                            BOOTSTRAP_DONE.store(true, std::sync::atomic::Ordering::SeqCst);
                             let _ = handle.emit("bootstrap-complete", ());
                         }
                         Err(e) => {
@@ -210,6 +227,7 @@ pub fn run() {
             workspace::workspace_current_dir,
             get_launch_dir,
             open_settings_window,
+            bootstrap_status,
             agent::agent_enable_claude_hooks,
             agent::agent_claude_hooks_status,
             secrets::secrets_get,

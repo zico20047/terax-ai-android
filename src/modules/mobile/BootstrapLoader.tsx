@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Progress {
   message: string;
@@ -16,6 +17,17 @@ export function BootstrapLoader({ onComplete }: { onComplete: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if bootstrap already completed (race condition: event fires
+    // before React mounts). If so, skip loading immediately.
+    invoke<boolean>("bootstrap_status").then((done) => {
+      if (done) {
+        onComplete();
+        return;
+      }
+    }).catch(() => {
+      // ignore — will wait for event
+    });
+
     const unlisteners: Promise<UnlistenFn>[] = [];
 
     unlisteners.push(
