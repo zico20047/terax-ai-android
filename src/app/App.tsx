@@ -106,7 +106,6 @@ import {
   leafIds,
   respawnSession,
   TerminalStack,
-  WtermTerminalStack,
   whenSessionReady,
   writeToSession,
   type TerminalPaneHandle,
@@ -253,9 +252,8 @@ export default function App() {
   // On Android, always use phone layout — landscape shouldn't switch to tablet
   const isPhone = IS_MOBILE ? true : breakpoint === "phone";
   const [selectionMode, setSelectionMode] = useState(false);
-  // useTerminalTouch only works with xterm.js (uses rendererPool slots).
-  // On mobile (wterm DOM renderer), touch is handled natively by the browser.
-  useTerminalTouch(terminalContainerRef, selectionMode, null, !IS_MOBILE);
+  // useTerminalTouch works with xterm.js for scroll + selection mode.
+  useTerminalTouch(terminalContainerRef, selectionMode, null, true);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
 
@@ -1391,24 +1389,15 @@ export default function App() {
         )}
         aria-hidden={!isTerminalTab}
       >
-        {IS_MOBILE ? (
-          <WtermTerminalStack
-            tabs={tabs}
-            activeId={activeId}
-            registerHandle={registerTerminalHandle}
-            onExit={handleLeafExit}
+        <TerminalStack
+          tabs={tabs}
+          activeId={activeId}
+          registerHandle={registerTerminalHandle}
+          onSearchReady={handleSearchReady}
+          onCwd={handleTerminalCwd}
+          onExit={handleLeafExit}
+          onFocusLeaf={handleFocusLeaf}
           />
-        ) : (
-          <TerminalStack
-            tabs={tabs}
-            activeId={activeId}
-            registerHandle={registerTerminalHandle}
-            onSearchReady={handleSearchReady}
-            onCwd={handleTerminalCwd}
-            onExit={handleLeafExit}
-            onFocusLeaf={handleFocusLeaf}
-          />
-        )}
       </div>
       <div
         className={cn(
