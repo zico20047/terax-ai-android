@@ -37,6 +37,7 @@ jobs:
             abi: x86
             bootstrap_arch: i686
             apk_suffix: x86
+    fail-fast: false
 
     steps:
       - name: Checkout
