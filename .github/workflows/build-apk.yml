@@ -83,19 +83,16 @@ jobs:
         env:
           PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS: "true"
 
-      - name: Download Termux bootstrap
+      - name: Verify bootstrap zip
         run: |
-          mkdir -p src-tauri/bootstrap-zips
           mkdir -p src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}
-          curl -L -o src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip \
-            "https://github.com/termux/termux-packages/releases/download/bootstrap-2026.04.26-r1+apt.android-7/bootstrap-${{ matrix.bootstrap_arch }}.zip"
-          # Verify download — must be >1MB
           SIZE=$(stat -c%s src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip)
           echo "Bootstrap zip size: $SIZE bytes"
           if [ "$SIZE" -lt 1000000 ]; then
-            echo "ERROR: Bootstrap zip too small ($SIZE bytes), download failed!"
+            echo "ERROR: Bootstrap zip too small ($SIZE bytes)!"
             exit 1
           fi
+          echo "OK: bootstrap zip verified ($SIZE bytes)"
 
       - name: Compile LD_PRELOAD library
         run: |

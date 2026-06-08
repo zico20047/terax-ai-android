@@ -9,8 +9,7 @@ dist/
 src-tauri/gen/android/app/build/
 src-tauri/target/
 
-# Bootstrap zips (downloaded by CI, too large for git)
-src-tauri/bootstrap-zips/
+# Bootstrap zips — committed to repo for reliable CI builds
 
 # Tauri
 src-tauri/gen/android/.gradle/
@@ -69,6 +68,3 @@ nul
 # Signing keys — NEVER commit 
 
 *.tsbuildinfo
-# Termux bootstrap — download before building (30MB)
-# See docs/how-to-install.md
-src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip
