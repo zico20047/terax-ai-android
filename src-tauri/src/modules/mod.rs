@@ -236,6 +236,8 @@ pub mod pty {
                 ));
 
                 // ── Reader thread ─────────────────────────────────
+                // Save master fd for resize ioctl before giving ownership to File
+                let session_master_fd = master_raw;
                 // Convert raw fd to File for reading (takes ownership)
                 let mut reader = unsafe { fs::File::from_raw_fd(master_raw) };
 
@@ -335,7 +337,7 @@ pub mod pty {
                     .expect("spawn pty waiter thread");
 
                 let session = Arc::new(InnerSession {
-                    master_fd,
+                    master_fd: session_master_fd,
                     child_pid: child,
                     writer,
                     done,
