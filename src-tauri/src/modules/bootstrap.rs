@@ -15,21 +15,22 @@ const MARKER_VERSION: &str = "terax-android-bootstrap-termux-v15";
 // The Termux bootstrap zip is embedded at compile time.
 // It contains bash, coreutils, apt, dpkg, shared libs, etc.
 // The correct architecture-specific zip is selected via cfg(target_arch).
+// IMPORTANT: Store outside gen/ — Tauri regenerates gen/ on each build!
 #[cfg(target_arch = "aarch64")]
 const BOOTSTRAP_ZIP: &[u8] =
-    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-aarch64.zip");
+    include_bytes!("../../bootstrap-zips/bootstrap-aarch64.zip");
 
 #[cfg(target_arch = "x86_64")]
 const BOOTSTRAP_ZIP: &[u8] =
-    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-x86_64.zip");
+    include_bytes!("../../bootstrap-zips/bootstrap-x86_64.zip");
 
 #[cfg(target_arch = "arm")]
 const BOOTSTRAP_ZIP: &[u8] =
-    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-arm.zip");
+    include_bytes!("../../bootstrap-zips/bootstrap-arm.zip");
 
 #[cfg(target_arch = "x86")]
 const BOOTSTRAP_ZIP: &[u8] =
-    include_bytes!("../../gen/android/app/src/main/assets/bootstrap-x86.zip");
+    include_bytes!("../../bootstrap-zips/bootstrap-x86.zip");
 
 /// The original Termux prefix path baked into all bootstrap binaries.
 /// ELF binaries keep this path — we translate at runtime via LD_PRELOAD.

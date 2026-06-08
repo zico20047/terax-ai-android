@@ -9,6 +9,9 @@ dist/
 src-tauri/gen/android/app/build/
 src-tauri/target/
 
+# Bootstrap zips (downloaded by CI, too large for git)
+src-tauri/bootstrap-zips/
+
 # Tauri
 src-tauri/gen/android/.gradle/
 src-tauri/gen/android/local.properties

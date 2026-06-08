@@ -85,10 +85,17 @@ jobs:
 
       - name: Download Termux bootstrap
         run: |
-          mkdir -p src-tauri/gen/android/app/src/main/assets
+          mkdir -p src-tauri/bootstrap-zips
           mkdir -p src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}
-          curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-${{ matrix.bootstrap_arch }}.zip \
+          curl -L -o src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip \
             https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-${{ matrix.bootstrap_arch }}.zip
+          # Verify download — must be >1MB
+          SIZE=$(stat -c%s src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip)
+          echo "Bootstrap zip size: $SIZE bytes"
+          if [ "$SIZE" -lt 1000000 ]; then
+            echo "ERROR: Bootstrap zip too small ($SIZE bytes), download failed!"
+            exit 1
+          fi
 
       - name: Compile LD_PRELOAD library
         run: |
