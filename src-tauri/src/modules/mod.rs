@@ -35,10 +35,14 @@ pub mod pty {
 
     impl Drop for InnerSession {
         fn drop(&mut self) {
+            // Signal reader/writer threads to stop
+            self.done.store(true, Ordering::Release);
+            // Kill child process
             let _ = signal::kill(self.child_pid, Signal::SIGKILL);
-            unsafe {
-                libc::close(self.master_fd);
-            }
+            // Do NOT close self.master_fd here — it's owned by the reader
+            // thread's std::fs::File. Closing it here causes a double-close
+            // which triggers Rust's IO Safety violation abort.
+            // The reader thread will close it when it drops the File on exit.
         }
     }
 
