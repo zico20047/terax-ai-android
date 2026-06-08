@@ -88,6 +88,7 @@ import {
 import { useBreakpoint } from "@/lib/use-mobile";
 import { useTerminalTouch } from "@/modules/mobile";
 import { ExtraKeysBar } from "@/modules/mobile";
+import { BootstrapLoader } from "@/modules/mobile/BootstrapLoader";
 import { useWakeLock } from "@/lib/useWakeLock";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
@@ -180,6 +181,20 @@ function readSidebarView(): SidebarViewId {
 }
 
 export default function App() {
+  // Bootstrap loading screen on Android (first launch)
+  const [bootstrapping, setBootstrapping] = useState(IS_ANDROID);
+
+  const handleBootstrapComplete = useCallback(() => {
+    setBootstrapping(false);
+  }, []);
+
+  // On non-Android, skip bootstrap immediately
+  useEffect(() => {
+    if (!IS_ANDROID) {
+      setBootstrapping(false);
+    }
+  }, []);
+
   const {
     tabs,
     activeId,
@@ -1790,6 +1805,15 @@ export default function App() {
       </TooltipProvider>
     </ThemeProvider>
   );
+
+  // Show loading screen during first-launch bootstrap on Android
+  if (bootstrapping) {
+    return (
+      <ThemeProvider>
+        <BootstrapLoader onComplete={handleBootstrapComplete} />
+      </ThemeProvider>
+    );
+  }
 
   return <AiComposerProvider>{shell}</AiComposerProvider>;
 }

@@ -124,12 +124,22 @@ pub fn run() {
         )
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            // Bootstrap Termux environment on Android
+            // Bootstrap Termux environment on Android (async — don't block UI)
             #[cfg(target_os = "android")]
             {
-                if let Err(e) = modules::bootstrap::ensure_bootstrapped() {
-                    log::error!("bootstrap failed: {e}");
-                }
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    match modules::bootstrap::ensure_bootstrapped(Some(&handle)) {
+                        Ok(_) => {
+                            log::info!("bootstrap: complete, notifying frontend");
+                            let _ = handle.emit("bootstrap-complete", ());
+                        }
+                        Err(e) => {
+                            log::error!("bootstrap failed: {e}");
+                            let _ = handle.emit("bootstrap-error", &e);
+                        }
+                    }
+                });
             }
             Ok(())
         })

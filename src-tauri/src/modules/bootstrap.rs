@@ -91,21 +91,20 @@ pub fn bash_path() -> PathBuf {
 
 // ── Bootstrap ───────────────────────────────────────────────────────
 
-pub fn ensure_bootstrapped() -> Result<(), String> {
+pub fn ensure_bootstrapped(app: Option<&tauri::AppHandle>) -> Result<(), String> {
     let rootfs = rootfs_dir();
     let marker = rootfs.join(MARKER);
 
     log::info!("bootstrap: rootfs = {}", rootfs.display());
     log::info!("bootstrap: prefix = {}", prefix_dir().display());
     log::info!("bootstrap: embedded zip size = {} bytes", BOOTSTRAP_ZIP.len());
+    emit_progress(app, "Checking...", 0, 0);
 
     let need_bootstrap = match fs::read_to_string(&marker) {
-        Ok(v) => v.trim() != MARKER_VERSION, // marker exists but version mismatch → re-bootstrap
-        Err(_) => true,                      // no marker → bootstrap
+        Ok(v) => v.trim() != MARKER_VERSION,
+        Err(_) => true,
     };
 
-    // Sanity check: even if marker says we're bootstrapped, verify bash actually
-    // exists. A previous extraction may have partially failed and left a stale marker.
     let bash = bash_path();
     let bash_exists = bash.exists();
     if !need_bootstrap && !bash_exists {
@@ -117,29 +116,27 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
     let need_bootstrap = need_bootstrap || !bash_exists;
 
     if need_bootstrap {
+        emit_progress(app, "Setting up directories...", 0, 1);
         log::info!(
             "bootstrap: setting up Termux environment v{} at {}",
             MARKER_VERSION, rootfs.display()
         );
 
-        // Create top-level directories
         for dir in &[&rootfs, &home_dir(), &prefix_dir(), &tmp_dir()] {
-            log::info!("bootstrap: mkdir {}", dir.display());
             fs::create_dir_all(dir).map_err(|e| format!("mkdir {}: {e}", dir.display()))?;
         }
 
-        // Create app-level cache dirs (apt expects /data/data/<pkg>/cache/apt/)
         for sub in &["apt/archives/partial", "apt/archives"] {
             let d = app_cache_dir().join(sub);
             fs::create_dir_all(&d).map_err(|e| format!("mkdir {}: {e}", d.display()))?;
         }
 
-        // Extract the bootstrap archive
+        emit_progress(app, "Extracting bootstrap archive...", 0, 3650);
         log::info!("bootstrap: starting extraction...");
-        extract_bootstrap()?;
+        extract_bootstrap(app)?;
         log::info!("bootstrap: extraction complete, bash exists = {}", bash_path().exists());
 
-        // Create directories that apt/dpkg expect but bootstrap doesn't include
+        emit_progress(app, "Creating symlinks...", 0, 0);
         for sub in &[
             "var/lib/apt/lists/partial",
             "var/lib/apt/lists",
@@ -160,51 +157,45 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
             fs::create_dir_all(&d).map_err(|e| format!("mkdir {}: {e}", d.display()))?;
         }
 
-        // Process SYMLINKS.txt (patch paths + create symlinks)
         process_symlinks()?;
-
-        // Patch text scripts to replace com.termux paths (ELF binaries handled by LD_PRELOAD)
+        emit_progress(app, "Patching binaries...", 0, 0);
         patch_scripts()?;
-
-        // Patch ELF DT_RUNPATH to remove com.termux paths (linker doesn't use LD_PRELOAD)
         patch_elf_runpaths()?;
-
-        // Write apt config override (fixes compiled-in prefix for apt/dpkg)
         write_apt_config()?;
-
-        // Write sources.list with [trusted=yes] (gpgv 2.5.17 regression workaround)
         write_sources_list()?;
-
-        // Patch pkg script to always add [trusted=yes] when it writes mirrors
         patch_pkg_script()?;
-
-        // Remove old-format GPG keyrings that gpgv 2.5.17 can't read.
-        // These cause "unsupported filetype" warnings.  We use [trusted=yes]
-        // instead.  User can `apt install termux-keyring` later for proper GPG.
         cleanup_gpg_keyrings()?;
-
-        // Write shell profile
         write_shell_profile()?;
-
-        // Copy the LD_PRELOAD path translation library to $PREFIX/lib/
         install_path_translator()?;
 
-        // Write marker
         fs::write(&marker, MARKER_VERSION)
             .map_err(|e| format!("write marker: {e}"))?;
     } else {
         log::info!("bootstrap: already done (marker exists)");
     }
 
-    // Always fix permissions
     fix_exec_permissions()?;
-
+    emit_progress(app, "Ready!", 1, 1);
     log::info!("bootstrap: complete!");
     Ok(())
 }
 
+/// Emit bootstrap progress to the frontend.
+fn emit_progress(app: Option<&tauri::AppHandle>, message: &str, current: usize, total: usize) {
+    use serde::Serialize;
+    #[derive(Serialize, Clone)]
+    struct Progress<'a> {
+        message: &'a str,
+        current: usize,
+        total: usize,
+    }
+    if let Some(handle) = app {
+        let _ = handle.emit("bootstrap-progress", Progress { message, current, total });
+    }
+}
+
 /// Extract the embedded bootstrap zip into $PREFIX.
-fn extract_bootstrap() -> Result<(), String> {
+fn extract_bootstrap(app: Option<&tauri::AppHandle>) -> Result<(), String> {
     let prefix = prefix_dir();
     let cursor = std::io::Cursor::new(BOOTSTRAP_ZIP);
     let mut archive =
@@ -271,8 +262,9 @@ fn extract_bootstrap() -> Result<(), String> {
         }
 
         extracted += 1;
-        if extracted % 500 == 0 {
+        if extracted % 200 == 0 {
             log::info!("bootstrap: extracted {extracted}/{total_files} files...");
+            emit_progress(app, "Extracting packages...", extracted, total_files);
         }
     }
 
