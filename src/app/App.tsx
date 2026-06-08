@@ -250,7 +250,8 @@ export default function App() {
   const explorerRef = useRef<FileExplorerHandle>(null);
   const explorerReturnFocusRef = useRef<HTMLElement | null>(null);
   const breakpoint = useBreakpoint();
-  const isPhone = breakpoint === "phone";
+  // On Android, always use phone layout — landscape shouldn't switch to tablet
+  const isPhone = IS_MOBILE ? true : breakpoint === "phone";
   const [selectionMode, setSelectionMode] = useState(false);
   // useTerminalTouch only works with xterm.js (uses rendererPool slots).
   // On mobile (wterm DOM renderer), touch is handled natively by the browser.
