@@ -38,9 +38,11 @@ const OLD_TERMUX_FILES: &str = "/data/data/com.termux/files";
 // ── Directory layout ────────────────────────────────────────────────
 
 pub fn rootfs_dir() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/data/data/app.crynta.terax"))
-        .join("files")
+    // On Android, dirs::home_dir() is unreliable — it may return the Termux
+    // HOME path (/data/data/<pkg>/files/home) if HOME is already set from a
+    // previous bootstrap. This causes a double "files" in the path.
+    // Hardcode the app data directory instead.
+    PathBuf::from("/data/data/app.crynta.terax/files")
 }
 
 pub fn prefix_dir() -> PathBuf {

@@ -156,11 +156,10 @@ pub mod pty {
                     libc::dup2(sfd, 2);
                 }
 
-                // Now close the original slave fd (we have dups on 0/1/2)
+                // Now close the original slave fd via drop (OwnedFd closes it).
+                // Do NOT call libc::close(sfd) again — that's a double-close
+                // which triggers Rust's IO Safety violation crash.
                 drop(slave);
-                if sfd > 2 {
-                    unsafe { libc::close(sfd); }
-                }
 
                 if let Some(ref dir) = cwd {
                     // Try the requested cwd, fall back to HOME on failure
