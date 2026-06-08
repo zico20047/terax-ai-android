@@ -182,7 +182,7 @@ function readSidebarView(): SidebarViewId {
 
 export default function App() {
   // Bootstrap loading screen on Android (first launch)
-  const [bootstrapping, setBootstrapping] = useState(IS_ANDROID);
+  const [bootstrapping, setBootstrapping] = useState(IS_MOBILE);
 
   const handleBootstrapComplete = useCallback(() => {
     setBootstrapping(false);
@@ -190,7 +190,7 @@ export default function App() {
 
   // On non-Android, skip bootstrap immediately
   useEffect(() => {
-    if (!IS_ANDROID) {
+    if (!IS_MOBILE) {
       setBootstrapping(false);
     }
   }, []);
