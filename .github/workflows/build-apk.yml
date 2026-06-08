@@ -35,7 +35,7 @@ jobs:
             tauri_target: i686
             ndk_prefix: i686-linux-android
             abi: x86
-            bootstrap_arch: x86
+            bootstrap_arch: i686
             apk_suffix: x86
 
     steps:
@@ -88,7 +88,7 @@ jobs:
           mkdir -p src-tauri/bootstrap-zips
           mkdir -p src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}
           curl -L -o src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip \
-            https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-${{ matrix.bootstrap_arch }}.zip
+            "https://github.com/termux/termux-packages/releases/download/bootstrap-2026.04.26-r1+apt.android-7/bootstrap-${{ matrix.bootstrap_arch }}.zip"
           # Verify download — must be >1MB
           SIZE=$(stat -c%s src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip)
           echo "Bootstrap zip size: $SIZE bytes"

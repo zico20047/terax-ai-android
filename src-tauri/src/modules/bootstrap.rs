@@ -30,7 +30,7 @@ const BOOTSTRAP_ZIP: &[u8] =
 
 #[cfg(target_arch = "x86")]
 const BOOTSTRAP_ZIP: &[u8] =
-    include_bytes!("../../bootstrap-zips/bootstrap-x86.zip");
+    include_bytes!("../../bootstrap-zips/bootstrap-i686.zip");
 
 /// The original Termux prefix path baked into all bootstrap binaries.
 /// ELF binaries keep this path — we translate at runtime via LD_PRELOAD.
