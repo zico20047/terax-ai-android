@@ -183,6 +183,7 @@ pub fn ensure_bootstrapped(app: Option<&tauri::AppHandle>) -> Result<(), String>
 /// Emit bootstrap progress to the frontend.
 fn emit_progress(app: Option<&tauri::AppHandle>, message: &str, current: usize, total: usize) {
     use serde::Serialize;
+    use tauri::Emitter;
     #[derive(Serialize, Clone)]
     struct Progress<'a> {
         message: &'a str,
