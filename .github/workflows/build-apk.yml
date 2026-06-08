@@ -83,9 +83,17 @@ jobs:
         env:
           PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS: "true"
 
-      - name: Verify bootstrap zip
+      - name: Download bootstrap zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p src-tauri/bootstrap-zips
           mkdir -p src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}
+          gh release download bootstrap-v15 \
+            --repo zico20047/terax-ai-android \
+            --pattern "bootstrap-${{ matrix.bootstrap_arch }}.zip" \
+            --dir src-tauri/bootstrap-zips \
+            --clobber
           SIZE=$(stat -c%s src-tauri/bootstrap-zips/bootstrap-${{ matrix.bootstrap_arch }}.zip)
           echo "Bootstrap zip size: $SIZE bytes"
           if [ "$SIZE" -lt 1000000 ]; then
