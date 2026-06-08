@@ -57,63 +57,126 @@ pnpm install
 ### Download Termux bootstrap
 
 > [!IMPORTANT]
-> The bootstrap zip is **not included** in the repo (30MB). You must download it before building.
+> The bootstrap zip is **not included** in the repo (~30MB). You must
+> download it before building. Download the one matching your target
+> architecture.
 
 ```bash
-# Download the official Termux aarch64 bootstrap
+mkdir -p src-tauri/gen/android/app/src/main/assets
+
+# arm64-v8a (most phones/tablets)
 curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip \
   https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-aarch64.zip
+
+# x86_64 (emulators, Chromebooks)
+curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-x86_64.zip \
+  https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-x86_64.zip
+
+# armeabi-v7a (older phones)
+curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-arm.zip \
+  https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-arm.zip
+
+# x86 (legacy emulators)
+curl -L -o src-tauri/gen/android/app/src/main/assets/bootstrap-x86.zip \
+  https://github.com/termux/termux-packages/releases/download/bootstrap-2024.10.15/bootstrap-x86.zip
 ```
 
-Or download manually from [Termux releases](https://github.com/termux/termux-packages/releases) and place it at:
-```
-src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip
-```
+> [!TIP]
+> You only need to download the bootstrap for the architecture you're
+> building. Most users only need `bootstrap-aarch64.zip`.
 
 ### Compile the path translator (LD_PRELOAD library)
 
 > [!TIP]
-> A pre-compiled `.so` is included in the repo. **Skip this step** unless
-> you modified `path-translate.c`.
+> This step is only needed if you modified `path-translate.c` or are
+> building for a new architecture. The CI builds this automatically.
 
-#### Windows
+#### Windows (PowerShell)
 
 ```powershell
-# Find your NDK path — check these common locations:
-# C:\Users\<user>\AppData\Local\Android\Sdk\ndk\29.0.13846066\
-# C:\Program Files\Android\SDK\ndk\29.0.13846066\
+$NDK = "$env:LOCALAPPDATA\Android\Sdk\ndk\29.0.13846066\toolchains\llvm\prebuilt\windows-x86_64\bin"
 
-# Set NDK_CLANG to your compiler path:
-$NDK_CLANG = "$env:LOCALAPPDATA\Android\Sdk\ndk\29.0.13846066\toolchains\llvm\prebuilt\windows-x86_64\bin\aarch64-linux-android28-clang.cmd"
-
-& $NDK_CLANG -shared -fPIC -O2 `
+# arm64-v8a
+& "$NDK\aarch64-linux-android28-clang.cmd" -shared -fPIC -O2 `
   -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so `
-  src-tauri/src/modules/path-translate/path-translate.c `
-  -ldl
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# x86_64
+& "$NDK\x86_64-linux-android28-clang.cmd" -shared -fPIC -O2 `
+  -o src-tauri/gen/android/app/src/main/jniLibs/x86_64/libterax-path-translate.so `
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# armeabi-v7a
+& "$NDK\armv7a-linux-androideabi28-clang.cmd" -shared -fPIC -O2 `
+  -o src-tauri/gen/android/app/src/main/jniLibs/armeabi-v7a/libterax-path-translate.so `
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# x86
+& "$NDK\i686-linux-android28-clang.cmd" -shared -fPIC -O2 `
+  -o src-tauri/gen/android/app/src/main/jniLibs/x86/libterax-path-translate.so `
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
 ```
 
 #### Linux / macOS
 
 ```bash
-NDK_CLANG="$HOME/Android/Sdk/ndk/29.0.13846066/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang"
+NDK="$HOME/Android/Sdk/ndk/29.0.13846066/toolchains/llvm/prebuilt/linux-x86_64/bin"
 
-$NDK_CLANG -shared -fPIC -O2 \
+# arm64-v8a
+$NDK/aarch64-linux-android28-clang -shared -fPIC -O2 \
   -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so \
-  src-tauri/src/modules/path-translate/path-translate.c \
-  -ldl
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# x86_64
+$NDK/x86_64-linux-android28-clang -shared -fPIC -O2 \
+  -o src-tauri/gen/android/app/src/main/jniLibs/x86_64/libterax-path-translate.so \
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# armeabi-v7a
+$NDK/armv7a-linux-androideabi28-clang -shared -fPIC -O2 \
+  -o src-tauri/gen/android/app/src/main/jniLibs/armeabi-v7a/libterax-path-translate.so \
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
+
+# x86
+$NDK/i686-linux-android28-clang -shared -fPIC -O2 \
+  -o src-tauri/gen/android/app/src/main/jniLibs/x86/libterax-path-translate.so \
+  src-tauri/src/modules/path-translate/path-translate.c -ldl
 ```
 
 ### Build the APK
-> [!WARNING]
-> This aarch64 
+
 ```bash
-pnpm tauri android build --debug --apk --target universal 
+# Build for your device architecture (pick one):
+pnpm tauri android build --debug --apk --target aarch64    # arm64 (most devices)
+pnpm tauri android build --debug --apk --target x86_64     # x86_64 (emulators)
+pnpm tauri android build --debug --apk --target armv7      # arm32 (older phones)
+pnpm tauri android build --debug --apk --target i686       # x86 (legacy)
 ```
 
 Output:
 ```
 src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 ```
+
+> [!NOTE]
+> Tauri uses short target names: `aarch64`, `x86_64`, `armv7`, `i686`.
+> Not the full Rust triples like `aarch64-linux-android`.
+
+---
+
+### Alternative: Download pre-built APK
+
+You can skip building entirely and download a pre-built APK from
+[GitHub Releases](https://github.com/zico20047/terax-ai-android/releases).
+
+Pick the APK matching your device:
+
+| APK suffix | Architecture | Devices |
+|------------|-------------|---------|
+| `-arm64.apk` | arm64-v8a | Most modern phones/tablets |
+| `-x64.apk` | x86_64 | Emulators, Chromebooks, Intel tablets |
+| `-arm32.apk` | armeabi-v7a | Older phones |
+| `-x86.apk` | x86 | Legacy emulators |
 
 ---
 
@@ -174,7 +237,10 @@ You should see `Python 3.13.x`.
 | What | Path / Command |
 |------|----------------|
 | APK output | `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk` |
-| NDK compiler (Windows) | `%LOCALAPPDATA%\Android\Sdk\ndk\29.0.13846066\toolchains\llvm\prebuilt\windows-x86_64\bin\aarch64-linux-android28-clang.cmd` |
-| NDK compiler (Linux) | `~/Android/Sdk/ndk/29.0.13846066/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang` |
+| Bootstrap (arm64) | `src-tauri/gen/android/app/src/main/assets/bootstrap-aarch64.zip` |
+| Bootstrap (x86_64) | `src-tauri/gen/android/app/src/main/assets/bootstrap-x86_64.zip` |
+| NDK (Windows) | `%LOCALAPPDATA%\Android\Sdk\ndk\29.0.13846066\` |
+| NDK (Linux) | `~/Android/Sdk/ndk/29.0.13846066/` |
 | Install APK | `adb shell pm install /data/local/tmp/terax.apk` |
 | Uninstall | `adb shell pm uninstall app.crynta.terax` |
+| Pre-built APKs | [GitHub Releases](https://github.com/zico20047/terax-ai-android/releases) |

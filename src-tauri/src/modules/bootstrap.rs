@@ -97,6 +97,18 @@ pub fn ensure_bootstrapped() -> Result<(), String> {
         Err(_) => true,                      // no marker → bootstrap
     };
 
+    // Sanity check: even if marker says we're bootstrapped, verify bash actually
+    // exists. A previous extraction may have partially failed and left a stale marker.
+    let bash = bash_path();
+    let bash_exists = bash.exists();
+    if !need_bootstrap && !bash_exists {
+        log::warn!(
+            "bootstrap: marker says v{} but bash not found at {} — re-bootstrapping",
+            MARKER_VERSION, bash.display()
+        );
+    }
+    let need_bootstrap = need_bootstrap || !bash_exists;
+
     if need_bootstrap {
         log::info!(
             "bootstrap: setting up Termux environment v{} at {}",

@@ -1,22 +1,26 @@
 # Terax Android
 
 <p align="center">
+  
   <img src="https://img.shields.io/badge/status-beta-orange" alt="status" />
   <img src="https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS-green" alt="platform" />
-  <img src="https://img.shields.io/badge/arch-aarch64-blue" alt="arch" />
+  <img src="https://img.shields.io/badge/arch-arm64%20%7C%20x86__64%20%7C%20arm32%20%7C%20x86-blue" alt="arch" />
   <br />
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license" />
+  <img src="https://img.shields.io/github/v/tag/zico20047/terax-ai-android?label=version&color=blue" alt="version" />
   <img src="https://img.shields.io/badge/bootstrap-Termux-000000" alt="termux" />
 </p>
 
 > [!WARNING]
-> **Beta software.** This project is in early development. Expect bugs,
-> breaking changes, and missing features. Not recommended for production use.
+> **Beta software.** This project is in beta development. Expect bugs,
+> breaking changes, and missing features/forgot feature. Option recommended for production use.
 
 > [!CAUTION]
-> Tested on Huawei MatePad (HarmonyOS). Other Android/HarmonyOS devices
-> may have different SELinux policies. dpkg may report errors during package
-> installation — packages still work, errors are non-fatal.
+> Tested on Huawei MatePad 11.5" (HarmonyOS) and Redmi Note 5 Pro.
+> Phone portrait mode works well. On small phones, landscape mode (known design hard).
+> Other Android/HarmonyOS devices may have different SELinux policies.
+> dpkg may report errors during package installation — packages still
+> work, errors are non-fatal.
 
 A terminal app for Android tablets and phones with bash and apt package manager.
 
@@ -26,10 +30,10 @@ A terminal app for Android tablets and phones with bash and apt package manager.
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/tablet-terminal.jpg" width="600" alt="Terax terminal on tablet" />
+  <img src="docs/screenshots/tablet-terminal.jpg" width="600" alt="v0.1.0beta Terax terminal on tablet" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/phone-terminal.png" width="280" alt="Terax terminal on phone" />
+  <img src="docs/screenshots/phone-terminal.png" width="280" alt="v0.1.0beta Terax terminal on phone" />
 </p>
 
 <!-- Add screenshots here when ready:
@@ -55,10 +59,14 @@ A terminal app for Android tablets and phones with bash and apt package manager.
 ## Features
 
 - **bash terminal** with coreutils
-- **apt package manager** — install python, nodejs, git, vim, and more
-- **AI Chat** — OpenAI-compatible endpoints
+- **apt package manager** — can you use package like termux(pkg)
+- **Touch text selection** — hold and drag to select, copy, paste (wterm DOM renderer on mobile) Coming Soon (known bugs)
+- **Extra keys bar** — CTRL, ALT, ESC, TAB, arrow keys, symbols Coming Soon (known bugs)
+- **Wake lock** — screen stays on during long-running commands Coming Soon (known feat)
+- **Touch scroll** — drag to scroll through terminal history
+- **AI Chat** — OpenAI-compatible endpoints by terax AI 
 - **File Explorer** — browse shared storage
-- **Responsive UI** — tablet uses desktop layout, phone uses mobile nav
+- **Responsive UI** — tablet/phone uses desktop layout, only landscape phone uses mobile nav
 
 ## Quick Start
 
@@ -72,8 +80,9 @@ See [Terminal Guide](docs/terminal-guide.md) for full usage.
 
 ## Requirements
 
-- Android or HarmonyOS device with aarch64
-- ~500MB free space
+- Android 7.0+ (API 24) or HarmonyOS device
+- optional arm64-v8a, x86_64, armeabi-v7a, or x86 CPU
+- ~300MB free space
 
 ## Documentation
 
@@ -89,14 +98,19 @@ See [Terminal Guide](docs/terminal-guide.md) for full usage.
 
 - **Beta** — expect bugs and breaking changes
 - **GPG warning** — apt shows `NO_PUBKEY` — cosmetic, packages install fine
-- **dpkg errors** — some postinst scripts may fail — non-fatal
+- **wterm on Android** — DOM renderer has limited Android support. Native touch
+  selection works but scrollback scrolling is limited. A proper fix requires a
+  terminal renderer designed for Android (like Termux's own implementation).
+- **Landscape on phones** — may show tablet/desktop layout instead of
+  mobile UI (known bug, works fine in portrait)
 
 ## Credits
 
 - [Termux](https://termux.dev) — bootstrap binaries and package repository
 - [terax-ai](https://github.com/crynta/terax-ai) — AI development environment
 - [Tauri](https://tauri.app) — app framework
-- [xterm.js](https://xtermjs.org) — terminal emulator
+- [xterm.js](https://xtermjs.org) — terminal emulator (mobile/desktop)
+- [wterm](https://wterm.dev/) - limitations android terminal(testing)
 
 ## License
 
