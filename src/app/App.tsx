@@ -257,7 +257,7 @@ export default function App() {
   useTerminalTouch(terminalContainerRef, selectionMode, null, true);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
-  const { isKeyboardOpen } = useKeyboardHeight();
+  const { keyboardHeight, isKeyboardOpen } = useKeyboardHeight();
 
   // Intercept Android back button to close overlays instead of exiting app
   useEffect(() => {
@@ -1482,7 +1482,10 @@ export default function App() {
   const shell = (
     <ThemeProvider>
       <TooltipProvider>
-        <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground safe-area-top">
+        <div
+          className="relative flex flex-col overflow-hidden bg-background text-foreground safe-area-top"
+          style={{ height: `calc(100dvh - ${keyboardHeight}px)` }}
+        >
           {isPhone ? (
             <MobileHeader
               tabs={tabs}
