@@ -33,8 +33,8 @@ class MainActivity : TauriActivity() {
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
       val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
       val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-      val bottomInset = max(bars.bottom, ime.bottom)
-      v.setPadding(0, bars.top, 0, bottomInset)
+      // Only bottom padding for keyboard — top is handled by the system
+      v.setPadding(0, 0, 0, max(bars.bottom, ime.bottom))
 
       // Dispatch resize event so xterm.js FitAddon recalculates
       val wv = findWebViewRecursive(window.decorView)
