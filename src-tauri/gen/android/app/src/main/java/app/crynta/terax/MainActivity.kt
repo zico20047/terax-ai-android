@@ -1,5 +1,6 @@
 package app.crynta.terax
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -7,11 +8,9 @@ import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.FrameLayout
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import kotlin.math.max
 
 class MainActivity : TauriActivity() {
@@ -25,15 +24,18 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    // Set status bar + navigation bar to black to match terminal background
+    // so there's no visible gap between system bars and app content.
+    window.statusBarColor = Color.BLACK
+    window.navigationBarColor = Color.BLACK
+
     // Handle IME (keyboard) + system bar insets.
-    // NOTE: enableEdgeToEdge() breaks adjustResize on Android — the WebView
-    // doesn't shrink when the keyboard opens. Without it, adjustResize works
-    // and the WebView viewport shrinks automatically.
+    // Without enableEdgeToEdge(), adjustResize works and the WebView
+    // viewport shrinks automatically when the keyboard opens.
     val rootView = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
       val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
       val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-      // Only bottom padding for keyboard — top is handled by the system
       v.setPadding(0, 0, 0, max(bars.bottom, ime.bottom))
 
       // Dispatch resize event so xterm.js FitAddon recalculates
