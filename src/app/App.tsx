@@ -1482,10 +1482,7 @@ export default function App() {
   const shell = (
     <ThemeProvider>
       <TooltipProvider>
-        <div
-          className="relative flex flex-col overflow-hidden bg-background text-foreground safe-area-top"
-          style={{ height: `calc(100dvh - ${keyboardHeight}px)` }}
-        >
+        <div className="relative flex h-screen flex-col overflow-hidden bg-background text-foreground safe-area-top">
           {isPhone ? (
             <MobileHeader
               tabs={tabs}

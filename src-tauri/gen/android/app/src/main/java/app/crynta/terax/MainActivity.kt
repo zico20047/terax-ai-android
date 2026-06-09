@@ -3,12 +3,15 @@ package app.crynta.terax
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import kotlin.math.max
 
 class MainActivity : TauriActivity() {
@@ -20,16 +23,29 @@ class MainActivity : TauriActivity() {
   var backConsumedByJs = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    enableEdgeToEdge()
     super.onCreate(savedInstanceState)
 
-    // Handle IME (keyboard) insets — pad the root view so the WebView
-    // shrinks when the soft keyboard opens, keeping content visible.
+    // Handle IME (keyboard) + system bar insets.
+    // NOTE: enableEdgeToEdge() breaks adjustResize on Android — the WebView
+    // doesn't shrink when the keyboard opens. Without it, adjustResize works
+    // and the WebView viewport shrinks automatically.
     val rootView = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
       val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
       val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.setPadding(0, 0, 0, max(bars.bottom, ime.bottom))
+      val bottomInset = max(bars.bottom, ime.bottom)
+      v.setPadding(0, bars.top, 0, bottomInset)
+
+      // Dispatch resize event so xterm.js FitAddon recalculates
+      val wv = findWebViewRecursive(window.decorView)
+      if (wv != null) {
+        wv.post {
+          wv.evaluateJavascript(
+            "try{window.dispatchEvent(new Event('resize'));}catch(e){}",
+            null
+          )
+        }
+      }
       insets
     }
 
