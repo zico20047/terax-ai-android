@@ -69,3 +69,6 @@ nul
 # Signing keys — NEVER commit 
 
 *.tsbuildinfo
+screenshot*.png
+screenshot*.raw
+sk.png
