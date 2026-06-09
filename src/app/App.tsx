@@ -257,7 +257,7 @@ export default function App() {
   useTerminalTouch(terminalContainerRef, selectionMode, null, true);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
-  const { keyboardHeight, isKeyboardOpen } = useKeyboardHeight();
+  const { isKeyboardOpen } = useKeyboardHeight();
 
   // Intercept Android back button to close overlays instead of exiting app
   useEffect(() => {
