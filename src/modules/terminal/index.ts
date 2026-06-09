@@ -1,6 +1,5 @@
 export { TerminalPane, type TerminalPaneHandle } from "./TerminalPane";
 export { TerminalStack } from "./TerminalStack";
-export { WtermTerminalStack } from "./WtermTerminalStack";
 export {
   disposeSession,
   leafIdForPty,
