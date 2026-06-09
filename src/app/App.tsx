@@ -90,6 +90,7 @@ import { useTerminalTouch } from "@/modules/mobile";
 import { ExtraKeysBar } from "@/modules/mobile";
 import { BootstrapLoader } from "@/modules/mobile/BootstrapLoader";
 import { useWakeLock } from "@/lib/useWakeLock";
+import { useKeyboardHeight } from "@/lib/useKeyboardHeight";
 import { IS_MOBILE } from "@/lib/platform";
 import "@/lib/useBackHandler";
 import { addBackHandlerImmediate } from "@/lib/useBackHandler";
@@ -256,6 +257,7 @@ export default function App() {
   useTerminalTouch(terminalContainerRef, selectionMode, null, true);
   const [mobileNavTab, setMobileNavTab] = useState<MobileNavTab>("terminal");
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
+  const { isKeyboardOpen } = useKeyboardHeight();
 
   // Intercept Android back button to close overlays instead of exiting app
   useEffect(() => {
@@ -1480,7 +1482,7 @@ export default function App() {
   const shell = (
     <ThemeProvider>
       <TooltipProvider>
-        <div className="relative flex h-screen flex-col overflow-hidden bg-background text-foreground safe-area-top">
+        <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground safe-area-top">
           {isPhone ? (
             <MobileHeader
               tabs={tabs}
@@ -1637,14 +1639,14 @@ export default function App() {
                 activeTab?.kind === "terminal" && activeTab.private === true
               }
             />
-          ) : (
+          ) : !isKeyboardOpen ? (
             <MobileBottomNav
               activeTab={mobileNavTab}
               onSelectTab={setMobileNavTab}
               changedCount={sourceControl.changedCount}
               hasComposer={hasComposer}
             />
-          )}
+          ) : null}
 
           {isPhone ? (
             <>
