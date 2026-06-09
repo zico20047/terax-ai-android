@@ -1,35 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { IS_MOBILE } from "@/lib/platform";
 
 export function useKeyboardHeight() {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const rafRef = useRef(0);
-
-  const update = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      if (!window.visualViewport) return;
-      const vv = window.visualViewport;
-      const height = window.innerHeight - vv.height - vv.offsetTop;
-      setKeyboardHeight(Math.max(0, height));
-    });
-  }, []);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const baselineRef = useRef(window.innerHeight);
 
   useEffect(() => {
-    if (!window.visualViewport) return;
-    const vv = window.visualViewport;
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    window.addEventListener("orientationchange", update);
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-      window.removeEventListener("orientationchange", update);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [update]);
+    if (!IS_MOBILE) return;
 
-  return {
-    keyboardHeight,
-    isKeyboardOpen: keyboardHeight > 50,
-  };
+    const resetBaseline = () => {
+      setTimeout(() => {
+        baselineRef.current = window.innerHeight;
+      }, 300);
+    };
+
+    const check = () => {
+      requestAnimationFrame(() => {
+        const diff = baselineRef.current - window.innerHeight;
+        const open = diff > 100;
+        setIsKeyboardOpen(open);
+        if (!open) {
+          baselineRef.current = window.innerHeight;
+        }
+      });
+    };
+
+    window.addEventListener("resize", check);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", check);
+    }
+    screen.orientation?.addEventListener("change", resetBaseline);
+    return () => {
+      window.removeEventListener("resize", check);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", check);
+      }
+      screen.orientation?.removeEventListener("change", resetBaseline);
+    };
+  }, []);
+
+  return { keyboardHeight: 0, isKeyboardOpen };
 }

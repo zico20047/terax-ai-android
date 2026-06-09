@@ -71,7 +71,7 @@ export function MobileHeader({
   return (
     <div
       data-slot="mobile-header"
-      className="flex h-11 shrink-0 items-center border-b border-border/60 bg-card px-2 safe-area-top"
+      className="flex h-11 shrink-0 items-center border-b border-border/60 bg-card px-2"
     >
       <div
         ref={scrollRef}
