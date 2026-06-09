@@ -250,8 +250,13 @@ export default function App() {
   const explorerRef = useRef<FileExplorerHandle>(null);
   const explorerReturnFocusRef = useRef<HTMLElement | null>(null);
   const breakpoint = useBreakpoint();
-  // On Android, always use phone layout — landscape shouldn't switch to tablet
-  const isPhone = IS_MOBILE ? true : breakpoint === "phone";
+  // Use physical screen size (rotation-independent) to distinguish phone from
+  // tablet on Android. screen.width is the CSS-pixel width in portrait and
+  // does NOT change when the device rotates — so a phone in landscape stays a
+  // phone and a tablet always gets the tablet/desktop layout.
+  const isPhone = IS_MOBILE
+    ? Math.min(screen.width, screen.height) <= 639
+    : breakpoint === "phone";
   const [selectionMode, setSelectionMode] = useState(false);
   // useTerminalTouch works with xterm.js for scroll + selection mode.
   useTerminalTouch(terminalContainerRef, selectionMode, null, true);
