@@ -24,8 +24,8 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // Set status bar + navigation bar to black to match terminal background
-    // so there's no visible gap between system bars and app content.
+    WebView.setWebContentsDebuggingEnabled(true)
+
     window.statusBarColor = Color.BLACK
     window.navigationBarColor = Color.BLACK
 
