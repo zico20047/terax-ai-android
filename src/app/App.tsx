@@ -1390,7 +1390,8 @@ export default function App() {
       <div
         ref={terminalContainerRef}
         className={cn(
-          "absolute inset-0 pt-2 pb-2",
+          "absolute inset-0 pt-2",
+          IS_MOBILE && isTerminalTab ? "pb-0" : "pb-2",
           IS_MOBILE ? "px-1" : "px-3",
           !isTerminalTab && "invisible pointer-events-none",
         )}
