@@ -101,6 +101,7 @@ pub fn authorize_spawn_cwd(
 
 // User-initiated terminal spawn: canonicalize, require a real dir, and register
 // it as a root instead of rejecting paths outside existing roots.
+#[allow(dead_code)]
 pub fn authorize_user_spawn_cwd(
     registry: &WorkspaceRegistry,
     cwd: Option<&str>,

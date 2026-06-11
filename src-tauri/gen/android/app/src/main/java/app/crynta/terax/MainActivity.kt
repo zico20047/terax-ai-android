@@ -29,14 +29,12 @@ class MainActivity : TauriActivity() {
     window.statusBarColor = Color.BLACK
     window.navigationBarColor = Color.BLACK
 
-    // Handle IME (keyboard) + system bar insets.
-    // Without enableEdgeToEdge(), adjustResize works and the WebView
-    // viewport shrinks automatically when the keyboard opens.
+    // Without enableEdgeToEdge(), adjustResize handles both keyboard and
+    // system bars automatically. We only need to dispatch resize events
+    // so xterm.js FitAddon recalculates terminal dimensions.
     val rootView = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
-      val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.setPadding(0, 0, 0, max(bars.bottom, ime.bottom))
+      // No padding — the system handles system bars with adjustResize
 
       // Dispatch resize event so xterm.js FitAddon recalculates
       val wv = findWebViewRecursive(window.decorView)

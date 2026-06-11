@@ -12,7 +12,7 @@ pub mod pty {
     use std::collections::HashMap;
     use std::fs;
     use std::io::{Read, Write};
-    use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+    use std::os::fd::{FromRawFd, IntoRawFd, RawFd};
     use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
     use std::sync::{Arc, Condvar, Mutex, RwLock};
     use std::thread;
@@ -136,7 +136,7 @@ pub mod pty {
         };
 
         let OpenptyResult { master, slave } =
-            unsafe { openpty(Some(&win), None) }.map_err(|e| format!("openpty: {e}"))?;
+            openpty(Some(&win), None).map_err(|e| format!("openpty: {e}"))?;
 
         // Convert to raw fds BEFORE fork to avoid OwnedFd drop issues in child.
         // Rust's IO Safety abort fires when OwnedFd::drop closes an already-closed fd,
@@ -246,7 +246,7 @@ pub mod pty {
                 let mut reader = unsafe { fs::File::from_raw_fd(master_raw) };
 
                 let pending_r = pending.clone();
-                let done_r = done.clone();
+                let _done_r = done.clone();
                 let child_pid = child;
 
                 thread::Builder::new()

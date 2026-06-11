@@ -509,7 +509,7 @@ fn patch_elf_runpath(data: &mut Vec<u8>) -> bool {
 
     // Find DT_STRTAB (tag 5) to get .dynstr offset
     // Also find DT_RUNPATH (tag 0x1d) or DT_RPATH (tag 0x0f)
-    let mut strtab_addr = None;
+    let mut _strtab_addr = None;
     let mut runpath_entries: Vec<usize> = Vec::new();
 
     let num_entries = dyn_sz / 16;
@@ -525,7 +525,7 @@ fn patch_elf_runpath(data: &mut Vec<u8>) -> bool {
 
         if d_tag == 5 {
             // DT_STRTAB — virtual address of .dynstr
-            strtab_addr = Some(u64::from_le_bytes(data[off + 8..off + 16].try_into().unwrap()));
+            _strtab_addr = Some(u64::from_le_bytes(data[off + 8..off + 16].try_into().unwrap()));
         }
 
         if d_tag == 0x1d || d_tag == 0x0f {
@@ -725,7 +725,7 @@ fn patch_scripts_trusted(dir: &Path) {
 
 /// Write shell profile (.profile, .bashrc) with proper environment.
 fn write_shell_profile() -> Result<(), String> {
-    let our_rootfs = rootfs_dir().display().to_string();
+    let _our_rootfs = rootfs_dir().display().to_string();
     let prefix = prefix_dir().display().to_string();
 
     let profile_content = format!(
@@ -807,8 +807,6 @@ fi
 fn fix_exec_permissions() -> Result<(), String> {
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-
         let prefix = prefix_dir();
 
         // Fix ALL directories under prefix to 0o755 (readable + executable)
@@ -966,6 +964,7 @@ fn find_native_lib_dir() -> Option<PathBuf> {
 }
 
 /// Force re-bootstrap by removing the marker file.
+#[allow(dead_code)]
 pub fn force_rebootstrap() -> io::Result<()> {
     let marker = rootfs_dir().join(MARKER);
     if marker.exists() {

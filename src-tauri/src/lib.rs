@@ -2,7 +2,9 @@ mod modules;
 
 use modules::{agent, fs, git, net, pty, secrets, shell, workspace};
 use std::sync::Mutex;
-use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
+use tauri::{Emitter, State};
+#[cfg(not(target_os = "android"))]
+use tauri::{WebviewUrl, WebviewWindowBuilder};
 #[cfg(not(target_os = "android"))]
 use tauri_plugin_window_state::StateFlags;
 
@@ -113,6 +115,7 @@ pub fn run() {
     let cli_dir = parse_launch_dir();
     workspace::init_launch_cwd(cli_dir.as_deref());
 
+    #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_process::init());
 

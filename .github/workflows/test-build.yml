@@ -1,0 +1,96 @@
+name: Test Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android NDK
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;29.0.13846066" || true
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: cargo-${{ runner.os }}-aarch64-linux-android-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-aarch64-linux-android-
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS: "true"
+
+      - name: Download bootstrap zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p src-tauri/bootstrap-zips
+          mkdir -p src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
+          gh release download bootstrap-v15 \
+            --repo zico20047/terax-ai-android \
+            --pattern "bootstrap-aarch64.zip" \
+            --dir src-tauri/bootstrap-zips \
+            --clobber
+          SIZE=$(stat -c%s src-tauri/bootstrap-zips/bootstrap-aarch64.zip)
+          echo "Bootstrap zip size: $SIZE bytes"
+          if [ "$SIZE" -lt 1000000 ]; then
+            echo "ERROR: Bootstrap zip too small ($SIZE bytes)!"
+            exit 1
+          fi
+
+      - name: Compile LD_PRELOAD library
+        run: |
+          TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
+          $TOOLCHAIN/aarch64-linux-android28-clang \
+            -shared -fPIC -O2 \
+            -o src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libterax-path-translate.so \
+            src-tauri/src/modules/path-translate/path-translate.c
+
+      - name: Build APK
+        run: pnpm tauri android build --debug --target aarch64
+
+      - name: Rename APK
+        run: |
+          cp src-tauri/gen/android/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk \
+            terax-android-test-arm64.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terax-android-test-arm64
+          path: terax-android-test-arm64.apk
+          retention-days: 7
