@@ -1595,6 +1595,15 @@ export default function App() {
                       {workspaceSurface}
                     </div>
 
+                    {IS_MOBILE && isTerminalTab && (
+                      <ExtraKeysBar
+                        activeLeafId={activeLeafId}
+                        visible={isTerminalTab}
+                        selectionMode={selectionMode}
+                        onToggleSelectionMode={() => setSelectionMode((s) => !s)}
+                      />
+                    )}
+
                     {keysLoaded ? (
                       <motion.div
                         data-ai-input-bar
