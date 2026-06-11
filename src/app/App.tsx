@@ -1631,15 +1631,6 @@ export default function App() {
             )}
           </main>
 
-          {IS_MOBILE && isTerminalTab && (!isPhone || mobileNavTab === "terminal") && (
-            <ExtraKeysBar
-              activeLeafId={activeLeafId}
-              visible={isTerminalTab && (!isPhone || mobileNavTab === "terminal")}
-              selectionMode={selectionMode}
-              onToggleSelectionMode={() => setSelectionMode((s) => !s)}
-            />
-          )}
-
           {!isPhone ? (
             <StatusBar
               cwd={activeCwd}
