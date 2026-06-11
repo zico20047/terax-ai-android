@@ -32,14 +32,11 @@ class MainActivity : TauriActivity() {
     window.statusBarColor = Color.BLACK
     window.navigationBarColor = Color.BLACK
 
-    // Hide navigation bar on phones only (immersive sticky).
-    // Tablets use desktop layout without extra keys bar — keep nav bar.
-    val isPhone = resources.configuration.smallestScreenWidthDp < 600
-    if (isPhone) {
-      val controller = WindowInsetsControllerCompat(window, window.decorView)
-      controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-      controller.hide(WindowInsetsCompat.Type.navigationBars())
-    }
+    // Hide navigation bar (immersive sticky — swipe to temporarily show).
+    // Applies to both phone and tablet — swipe from edge to bring it back.
+    val controller = WindowInsetsControllerCompat(window, window.decorView)
+    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    controller.hide(WindowInsetsCompat.Type.navigationBars())
 
     // Without enableEdgeToEdge(), adjustResize handles both keyboard and
     // system bars automatically. We only need to dispatch resize events
