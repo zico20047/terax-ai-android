@@ -34,7 +34,13 @@ class MainActivity : TauriActivity() {
     // so xterm.js FitAddon recalculates terminal dimensions.
     val rootView = findViewById<View>(android.R.id.content)
     ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
-      // No padding — the system handles system bars with adjustResize
+      val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+      // Pad for keyboard (IME) only. The navigation bar is handled by
+      // adjustResize when keyboard is hidden; when keyboard IS shown the
+      // IME inset already includes the nav bar area so we don't double-count.
+      v.setPadding(0, 0, 0, max(0, ime.bottom - bars.bottom))
 
       // Dispatch resize event so xterm.js FitAddon recalculates
       val wv = findWebViewRecursive(window.decorView)
