@@ -1632,19 +1632,21 @@ export default function App() {
             )}
           </main>
 
-          {!isPhone && !IS_MOBILE ? (
-            <StatusBar
-              cwd={activeCwd}
-              filePath={activeFilePath}
-              home={home}
-              onCd={sendCd}
-              onWorkspaceChange={switchWorkspace}
-              onOpenMini={openMini}
-              hasComposer={hasComposer}
-              privateActive={
-                activeTab?.kind === "terminal" && activeTab.private === true
-              }
-            />
+          {!isPhone ? (
+            !IS_MOBILE ? (
+              <StatusBar
+                cwd={activeCwd}
+                filePath={activeFilePath}
+                home={home}
+                onCd={sendCd}
+                onWorkspaceChange={switchWorkspace}
+                onOpenMini={openMini}
+                hasComposer={hasComposer}
+                privateActive={
+                  activeTab?.kind === "terminal" && activeTab.private === true
+                }
+              />
+            ) : null
           ) : !isKeyboardOpen ? (
             <MobileBottomNav
               activeTab={mobileNavTab}
