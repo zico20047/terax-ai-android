@@ -434,6 +434,9 @@ function setupResizeObserver(slot: Slot, p: AcquireParams): void {
       slot.fitAddon.fit();
       if (slot.ptyTimer) clearTimeout(slot.ptyTimer);
       slot.ptyTimer = setTimeout(flushPty, PTY_RESIZE_DEBOUNCE_MS);
+      setTimeout(() => {
+        if (slot.currentLeafId === p.leafId) slot.fitAddon.fit();
+      }, 100);
     }, FIT_DEBOUNCE_MS);
   });
   slot.observer.observe(container);
