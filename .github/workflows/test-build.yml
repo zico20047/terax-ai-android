@@ -85,8 +85,9 @@ jobs:
 
       - name: Rename APK
         run: |
-          cp src-tauri/gen/android/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk \
-            terax-android-test-arm64.apk
+          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -1)
+          echo "Found APK: $APK_PATH"
+          cp "$APK_PATH" terax-android-test-arm64.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
