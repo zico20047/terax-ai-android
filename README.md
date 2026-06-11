@@ -6,8 +6,9 @@
   <img src="https://img.shields.io/badge/platform-Android%20%7C%20HarmonyOS-green" alt="platform" />
   <img src="https://img.shields.io/badge/arch-arm64%20%7C%20x86__64%20%7C%20arm32%20%7C%20x86-blue" alt="arch" />
   <br />
-  <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license" />
+  <img src="https://img.shields.io/github/license/zico20047/terax-ai-android?color=blue" alt="license" />
   <img src="https://img.shields.io/github/v/tag/zico20047/terax-ai-android?label=version&color=blue" alt="version" />
+  <img src="https://img.shields.io/github/downloads/zico20047/terax-ai-android/total?color=blue" alt="downloads" />
   <img src="https://img.shields.io/badge/bootstrap-Termux-000000" alt="termux" />
 </p>
 
