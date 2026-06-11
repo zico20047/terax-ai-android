@@ -1632,7 +1632,7 @@ export default function App() {
             )}
           </main>
 
-          {!isPhone ? (
+          {!isPhone && !IS_MOBILE ? (
             <StatusBar
               cwd={activeCwd}
               filePath={activeFilePath}
