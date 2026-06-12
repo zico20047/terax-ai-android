@@ -1592,6 +1592,20 @@ export default function App() {
                 <ResizableHandle withHandle />
                 <ResizablePanel id="workspace" defaultSize="78%" minSize="30%">
                   <div className="flex h-full min-h-0 flex-col">
+                    {IS_MOBILE && !isPhone && (
+                      <MobileHeader
+                        tabs={tabs}
+                        activeId={activeId}
+                        onSelect={setActiveId}
+                        onNew={openNewTab}
+                        onNewPrivate={openNewPrivateTab}
+                        onNewPreview={() => openPreviewTab("")}
+                        onNewEditor={() => setNewEditorOpen(true)}
+                        onNewGitGraph={openGitGraphFromContext}
+                        onClose={handleClose}
+                        onPin={pinTab}
+                      />
+                    )}
                     <div className="relative min-h-0 flex-1">
                       {workspaceSurface}
                     </div>
@@ -1602,6 +1616,11 @@ export default function App() {
                         visible={isTerminalTab}
                         selectionMode={selectionMode}
                         onToggleSelectionMode={() => setSelectionMode((s) => !s)}
+                        onOpenSettings={
+                          IS_MOBILE && !isPhone
+                            ? () => setShowSettingsOverlay((s) => !s)
+                            : undefined
+                        }
                       />
                     )}
 

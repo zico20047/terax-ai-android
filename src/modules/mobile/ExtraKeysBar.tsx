@@ -12,6 +12,7 @@ type Props = {
   visible: boolean;
   selectionMode: boolean;
   onToggleSelectionMode: () => void;
+  onOpenSettings?: () => void;
 };
 
 export function ExtraKeysBar({
@@ -19,6 +20,7 @@ export function ExtraKeysBar({
   visible,
   selectionMode,
   onToggleSelectionMode,
+  onOpenSettings,
 }: Props) {
   const [modifiers, setModifiers] = useState<Set<Modifier>>(new Set());
   const modifiersRef = useRef(modifiers);
@@ -245,6 +247,12 @@ export function ExtraKeysBar({
         <KeyButton label="&" onClick={() => handleDirectKey("&")} />
         <KeyButton label=";" onClick={() => handleDirectKey(";")} />
         <KeyButton label="." onClick={() => handleDirectKey(".")} />
+        {onOpenSettings && (
+          <>
+            <Divider />
+            <KeyButton label="&#9881;" onClick={onOpenSettings} />
+          </>
+        )}
       </div>
     </>
   );
