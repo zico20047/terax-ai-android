@@ -218,6 +218,7 @@ export default function App() {
     focusPane,
     focusNextPaneInTab,
     splitActivePane,
+    splitPaneByLeafId,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,
@@ -1405,7 +1406,10 @@ export default function App() {
           onCwd={handleTerminalCwd}
           onExit={handleLeafExit}
           onFocusLeaf={handleFocusLeaf}
-          />
+          onSplitLeaf={splitPaneByLeafId}
+          onCloseLeaf={(leafId) => closePaneByLeaf(leafId)}
+          maxPanes={MAX_PANES_PER_TAB}
+        />
       </div>
       <div
         className={cn(
@@ -1604,6 +1608,7 @@ export default function App() {
                         onNewGitGraph={openGitGraphFromContext}
                         onClose={handleClose}
                         onPin={pinTab}
+                        isTablet
                       />
                     )}
                     <div className="relative min-h-0 flex-1">
@@ -1621,6 +1626,7 @@ export default function App() {
                             ? () => setShowSettingsOverlay((s) => !s)
                             : undefined
                         }
+                        isTablet={IS_MOBILE && !isPhone}
                       />
                     )}
 

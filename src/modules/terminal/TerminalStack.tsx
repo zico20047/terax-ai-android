@@ -3,17 +3,19 @@ import type { SearchAddon } from "@xterm/addon-search";
 import { useEffect, useMemo, useRef } from "react";
 import { PaneTreeView } from "./PaneTreeView";
 import type { TerminalPaneHandle } from "./TerminalPane";
-import { leafIds } from "./lib/panes";
+import { leafIds, type SplitDir } from "./lib/panes";
 
 type Props = {
   tabs: Tab[];
   activeId: number;
-  /** Register/unregister handle by leaf id (not tab id). */
   registerHandle: (leafId: number, handle: TerminalPaneHandle | null) => void;
   onSearchReady: (leafId: number, addon: SearchAddon) => void;
   onCwd: (leafId: number, cwd: string) => void;
   onExit: (leafId: number, code: number) => void;
   onFocusLeaf: (tabId: number, leafId: number) => void;
+  onSplitLeaf?: (leafId: number, dir: SplitDir) => void;
+  onCloseLeaf?: (leafId: number) => void;
+  maxPanes: number;
 };
 
 type Bundle = {
@@ -31,6 +33,9 @@ export function TerminalStack({
   onCwd,
   onExit,
   onFocusLeaf,
+  onSplitLeaf,
+  onCloseLeaf,
+  maxPanes,
 }: Props) {
   const terminals = useMemo(
     () => tabs.filter((t) => t.kind === "terminal"),
@@ -81,6 +86,7 @@ export function TerminalStack({
     <div className="relative h-full w-full">
       {terminals.map((t) => {
         const tabVisible = t.id === activeId;
+        const paneCount = t.kind === "terminal" ? leafIds(t.paneTree).length : 1;
         return (
           <div
             key={t.id}
@@ -97,6 +103,10 @@ export function TerminalStack({
               activeLeafId={t.activeLeafId}
               onFocusLeaf={(leafId) => onFocusLeaf(t.id, leafId)}
               getBundle={getBundle}
+              onSplit={onSplitLeaf}
+              onCloseLeaf={onCloseLeaf}
+              maxPanes={maxPanes}
+              paneCount={paneCount}
             />
           </div>
         );

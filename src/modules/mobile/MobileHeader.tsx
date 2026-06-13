@@ -32,6 +32,7 @@ type Props = {
   onNewGitGraph: () => void;
   onClose: (id: number) => void;
   onPin: (id: number) => void;
+  isTablet?: boolean;
 };
 
 function tabIcon(kind: Tab["kind"]) {
@@ -65,13 +66,17 @@ export function MobileHeader({
   onNewGitGraph,
   onClose,
   onPin,
+  isTablet,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
       data-slot="mobile-header"
-      className="flex h-11 shrink-0 items-center border-b border-border/60 bg-card px-2"
+      className={cn(
+        "flex shrink-0 items-center border-b border-border/60 bg-card px-2",
+        isTablet ? "h-10" : "h-11",
+      )}
     >
       <div
         ref={scrollRef}
@@ -97,7 +102,7 @@ export function MobileHeader({
                 size={14}
                 strokeWidth={isActive ? 2 : 1.75}
               />
-              <span className="max-w-20 truncate">{tab.title}</span>
+              <span className={cn("truncate", isTablet ? "max-w-40" : "max-w-20")}>{tab.title}</span>
               {isActive && tabs.length > 1 ? (
                 <span
                   role="button"

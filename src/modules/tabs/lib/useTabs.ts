@@ -703,6 +703,33 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     [],
   );
 
+  const splitPaneByLeafId = useCallback(
+    (leafId: number, dir: SplitDir): number | null => {
+      let newLeafId: number | null = null;
+      setTabs((curr) =>
+        curr.map((t) => {
+          if (t.kind !== "terminal") return t;
+          if (!hasLeaf(t.paneTree, leafId)) return t;
+          if (leafIds(t.paneTree).length >= MAX_PANES_PER_TAB) return t;
+          const splitId = nextIdRef.current++;
+          const lid = nextIdRef.current++;
+          newLeafId = lid;
+          const paneTree = splitLeaf(
+            t.paneTree,
+            leafId,
+            splitId,
+            lid,
+            dir,
+            t.cwd,
+          );
+          return { ...t, paneTree, activeLeafId: lid };
+        }),
+      );
+      return newLeafId;
+    },
+    [],
+  );
+
   const closePaneByLeaf = useCallback((leafId: number): void => {
     let didRemove = false;
     setTabs((curr) => {
@@ -818,6 +845,7 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     focusPane,
     focusNextPaneInTab,
     splitActivePane,
+    splitPaneByLeafId,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,

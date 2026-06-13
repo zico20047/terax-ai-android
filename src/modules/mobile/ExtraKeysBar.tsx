@@ -13,6 +13,7 @@ type Props = {
   selectionMode: boolean;
   onToggleSelectionMode: () => void;
   onOpenSettings?: () => void;
+  isTablet?: boolean;
 };
 
 export function ExtraKeysBar({
@@ -21,6 +22,7 @@ export function ExtraKeysBar({
   selectionMode,
   onToggleSelectionMode,
   onOpenSettings,
+  isTablet,
 }: Props) {
   const [modifiers, setModifiers] = useState<Set<Modifier>>(new Set());
   const modifiersRef = useRef(modifiers);
@@ -208,7 +210,7 @@ export function ExtraKeysBar({
       <div
         className="flex items-center gap-1 overflow-x-auto border-t bg-zinc-950 px-1"
         style={{
-          height: EXTRA_KEYS_HEIGHT,
+          height: isTablet ? 44 : EXTRA_KEYS_HEIGHT,
           borderColor: "var(--terminal-ansi-bright-black, #3f3f46)",
           touchAction: "pan-x",
         }}
@@ -217,40 +219,43 @@ export function ExtraKeysBar({
           label="CTRL"
           active={ctrlActive}
           onClick={() => toggleModifier("ctrl")}
+          tall={isTablet}
         />
         <KeyButton
           label="ALT"
           active={altActive}
           onClick={() => toggleModifier("alt")}
+          tall={isTablet}
         />
         <KeyButton
           label="SEL"
           active={selectionMode}
           onClick={onToggleSelectionMode}
+          tall={isTablet}
         />
         <Divider />
-        <KeyButton label="ESC" onClick={() => handleDirectKey("\x1b")} />
-        <KeyButton label="TAB" onClick={() => handleDirectKey("\t")} />
-        <KeyButton label="HOME" onClick={() => handleDirectKey("\x1b[H")} />
-        <KeyButton label="END" onClick={() => handleDirectKey("\x1b[F")} />
+        <KeyButton label="ESC" onClick={() => handleDirectKey("\x1b")} tall={isTablet} />
+        <KeyButton label="TAB" onClick={() => handleDirectKey("\t")} tall={isTablet} />
+        <KeyButton label="HOME" onClick={() => handleDirectKey("\x1b[H")} tall={isTablet} />
+        <KeyButton label="END" onClick={() => handleDirectKey("\x1b[F")} tall={isTablet} />
         <Divider />
-        <KeyButton label="&#8592;" onClick={() => handleDirectKey("\x1b[D")} />
-        <KeyButton label="&#8593;" onClick={() => handleDirectKey("\x1b[A")} />
-        <KeyButton label="&#8595;" onClick={() => handleDirectKey("\x1b[B")} />
-        <KeyButton label="&#8594;" onClick={() => handleDirectKey("\x1b[C")} />
+        <KeyButton label="&#8592;" onClick={() => handleDirectKey("\x1b[D")} tall={isTablet} />
+        <KeyButton label="&#8593;" onClick={() => handleDirectKey("\x1b[A")} tall={isTablet} />
+        <KeyButton label="&#8595;" onClick={() => handleDirectKey("\x1b[B")} tall={isTablet} />
+        <KeyButton label="&#8594;" onClick={() => handleDirectKey("\x1b[C")} tall={isTablet} />
         <Divider />
-        <KeyButton label="-" onClick={() => handleDirectKey("-")} />
-        <KeyButton label="/" onClick={() => handleDirectKey("/")} />
-        <KeyButton label="|" onClick={() => handleDirectKey("|")} />
-        <KeyButton label="~" onClick={() => handleDirectKey("~")} />
-        <KeyButton label="$" onClick={() => handleDirectKey("$")} />
-        <KeyButton label="&" onClick={() => handleDirectKey("&")} />
-        <KeyButton label=";" onClick={() => handleDirectKey(";")} />
-        <KeyButton label="." onClick={() => handleDirectKey(".")} />
+        <KeyButton label="-" onClick={() => handleDirectKey("-")} tall={isTablet} />
+        <KeyButton label="/" onClick={() => handleDirectKey("/")} tall={isTablet} />
+        <KeyButton label="|" onClick={() => handleDirectKey("|")} tall={isTablet} />
+        <KeyButton label="~" onClick={() => handleDirectKey("~")} tall={isTablet} />
+        <KeyButton label="$" onClick={() => handleDirectKey("$")} tall={isTablet} />
+        <KeyButton label="&" onClick={() => handleDirectKey("&")} tall={isTablet} />
+        <KeyButton label=";" onClick={() => handleDirectKey(";")} tall={isTablet} />
+        <KeyButton label="." onClick={() => handleDirectKey(".")} tall={isTablet} />
         {onOpenSettings && (
           <>
             <Divider />
-            <KeyButton label="&#9881;" onClick={onOpenSettings} />
+            <KeyButton label="&#9881;" onClick={onOpenSettings} tall={isTablet} />
           </>
         )}
       </div>
@@ -262,17 +267,20 @@ function KeyButton({
   label,
   active = false,
   onClick,
+  tall = false,
 }: {
   label: string;
   active?: boolean;
   onClick: () => void;
+  tall?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-7 min-w-[34px] flex-shrink-0 items-center justify-center rounded px-2 text-xs font-semibold select-none transition-colors",
+        "flex min-w-[34px] flex-shrink-0 items-center justify-center rounded px-2 text-xs font-semibold select-none transition-colors",
+        tall ? "h-8" : "h-7",
         "bg-zinc-900 text-zinc-300 active:bg-zinc-800",
         active &&
           "bg-blue-600 text-white shadow-md shadow-blue-600/30 active:bg-blue-700",
