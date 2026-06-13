@@ -15,6 +15,7 @@ type Props = {
   onFocusLeaf: (tabId: number, leafId: number) => void;
   onSplitLeaf?: (leafId: number, dir: SplitDir) => void;
   onCloseLeaf?: (leafId: number) => void;
+  onSwapLeaves?: (idA: number, idB: number) => void;
   maxPanes: number;
 };
 
@@ -35,6 +36,7 @@ export function TerminalStack({
   onFocusLeaf,
   onSplitLeaf,
   onCloseLeaf,
+  onSwapLeaves,
   maxPanes,
 }: Props) {
   const terminals = useMemo(
@@ -105,6 +107,7 @@ export function TerminalStack({
               getBundle={getBundle}
               onSplit={onSplitLeaf}
               onCloseLeaf={onCloseLeaf}
+              onSwap={onSwapLeaves}
               maxPanes={maxPanes}
               paneCount={paneCount}
             />

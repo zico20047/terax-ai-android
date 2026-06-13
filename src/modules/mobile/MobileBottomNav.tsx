@@ -4,7 +4,6 @@ import {
   FolderGitTwoIcon,
   ComputerTerminal01Icon,
   Mic01Icon,
-  Settings01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
@@ -49,7 +48,6 @@ export function MobileBottomNav({
     ...(hasComposer
       ? [{ id: "ai" as const, label: "AI", icon: Mic01Icon }]
       : []),
-    { id: "settings", label: "Settings", icon: Settings01Icon },
   ];
 
   return (

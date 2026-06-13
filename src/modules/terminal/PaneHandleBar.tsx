@@ -4,16 +4,28 @@ import {
   Cancel01Icon,
   ArrowDown01Icon,
   ArrowRight01Icon,
+  Drag01Icon,
 } from "@hugeicons/core-free-icons";
 
 type Props = {
   active: boolean;
+  leafId: number;
   onSplit: (dir: "row" | "col") => void;
   onClose: (() => void) | null;
+  onSwapDrag: (fromLeafId: number, x: number, y: number) => void;
+  onSwapEnd: (fromLeafId: number, x: number, y: number) => void;
   canSplit: boolean;
 };
 
-export function PaneHandleBar({ active, onSplit, onClose, canSplit }: Props) {
+export function PaneHandleBar({
+  active,
+  onSplit,
+  onClose,
+  onSwapDrag,
+  onSwapEnd,
+  leafId,
+  canSplit,
+}: Props) {
   if (!active) return null;
 
   return (
@@ -35,6 +47,23 @@ export function PaneHandleBar({ active, onSplit, onClose, canSplit }: Props) {
           icon={ArrowDown01Icon}
         />
       )}
+      <HandleBtn
+        label="Drag to Swap"
+        icon={Drag01Icon}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          const move = (ev: PointerEvent) => {
+            onSwapDrag(leafId, ev.clientX, ev.clientY);
+          };
+          const up = (ev: PointerEvent) => {
+            document.removeEventListener("pointermove", move);
+            document.removeEventListener("pointerup", up);
+            onSwapEnd(leafId, ev.clientX, ev.clientY);
+          };
+          document.addEventListener("pointermove", move);
+          document.addEventListener("pointerup", up);
+        }}
+      />
       {onClose && (
         <HandleBtn
           label="Close Pane"
@@ -51,12 +80,13 @@ function HandleBtn({
   label,
   onClick,
   icon,
-  danger = false,
+  onPointerDown,
 }: {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   icon: any;
   danger?: boolean;
+  onPointerDown?: (e: React.PointerEvent) => void;
 }) {
   return (
     <button
@@ -64,13 +94,12 @@ function HandleBtn({
       title={label}
       onClick={(e) => {
         e.stopPropagation();
-        onClick();
+        onClick?.();
       }}
+      onPointerDown={onPointerDown}
       className={cn(
-        "flex h-6 w-6 items-center justify-center rounded transition-colors",
-        danger
-          ? "text-zinc-500 hover:bg-white/10 hover:text-white"
-          : "text-zinc-500 hover:bg-white/10 hover:text-white",
+        "flex h-6 w-6 items-center justify-center rounded transition-colors touch-none",
+        "text-zinc-500 hover:bg-white/10 hover:text-white",
       )}
     >
       <HugeiconsIcon icon={icon} size={14} strokeWidth={1.75} />

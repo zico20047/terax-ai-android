@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -25,6 +25,7 @@ type Props = {
   getBundle: (leafId: number) => LeafBundle;
   onSplit?: (leafId: number, dir: SplitDir) => void;
   onCloseLeaf?: (leafId: number) => void;
+  onSwap?: (idA: number, idB: number) => void;
   maxPanes: number;
   paneCount: number;
 };
@@ -37,14 +38,38 @@ export function PaneTreeView({
   getBundle,
   onSplit,
   onCloseLeaf,
+  onSwap,
   maxPanes,
   paneCount,
 }: Props) {
+  const [dragLeafId, setDragLeafId] = useState<number | null>(null);
+  const [hoverLeafId, setHoverLeafId] = useState<number | null>(null);
+
+  const handleSwapDrag = (fromId: number, x: number, y: number) => {
+    setDragLeafId(fromId);
+    const target = document.elementFromPoint(x, y);
+    const paneEl = target?.closest("[data-pane-leaf]") as HTMLElement | null;
+    const hoverId = paneEl ? Number(paneEl.dataset.paneLeaf) : null;
+    setHoverLeafId(hoverId !== fromId ? hoverId : null);
+  };
+
+  const handleSwapEnd = (fromId: number, x: number, y: number) => {
+    const target = document.elementFromPoint(x, y);
+    const paneEl = target?.closest("[data-pane-leaf]") as HTMLElement | null;
+    const targetId = paneEl ? Number(paneEl.dataset.paneLeaf) : null;
+    if (targetId !== null && targetId !== fromId && onSwap) {
+      onSwap(fromId, targetId);
+    }
+    setDragLeafId(null);
+    setHoverLeafId(null);
+  };
+
   if (node.kind === "leaf") {
     const focused = node.id === activeLeafId;
     const b = getBundle(node.id);
     const canSplit = paneCount < maxPanes;
     const canClose = paneCount > 1;
+    const isDragTarget = hoverLeafId === node.id && dragLeafId !== null;
 
     return (
       <div
@@ -56,16 +81,21 @@ export function PaneTreeView({
         }}
         data-pane-leaf={node.id}
         className={cn(
-          "relative h-full w-full",
-          focused && tabVisible
-            ? "ring-1 ring-inset ring-white/30"
-            : "ring-1 ring-inset ring-transparent",
+          "relative h-full w-full transition-[box-shadow] duration-150",
+          isDragTarget
+            ? "ring-2 ring-inset ring-white/60"
+            : focused && tabVisible
+              ? "ring-1 ring-inset ring-white/30"
+              : "ring-1 ring-inset ring-transparent",
         )}
       >
         <PaneHandleBar
           active={focused && tabVisible}
+          leafId={node.id}
           onSplit={(dir) => onSplit?.(node.id, dir)}
           onClose={canClose ? () => onCloseLeaf?.(node.id) : null}
+          onSwapDrag={handleSwapDrag}
+          onSwapEnd={handleSwapEnd}
           canSplit={canSplit}
         />
         <TerminalPane
@@ -98,6 +128,7 @@ export function PaneTreeView({
               getBundle={getBundle}
               onSplit={onSplit}
               onCloseLeaf={onCloseLeaf}
+              onSwap={onSwap}
               maxPanes={maxPanes}
               paneCount={paneCount}
             />

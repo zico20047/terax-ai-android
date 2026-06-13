@@ -73,3 +73,6 @@ screenshot*.png
 screenshot*.raw
 sk.png
 terax-release.keystore
+release-apks/
+test-apk/
+devtools.py

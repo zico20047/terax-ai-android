@@ -219,6 +219,7 @@ export default function App() {
     focusNextPaneInTab,
     splitActivePane,
     splitPaneByLeafId,
+    swapPanes,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,
@@ -1408,6 +1409,7 @@ export default function App() {
           onFocusLeaf={handleFocusLeaf}
           onSplitLeaf={splitPaneByLeafId}
           onCloseLeaf={(leafId) => closePaneByLeaf(leafId)}
+          onSwapLeaves={swapPanes}
           maxPanes={MAX_PANES_PER_TAB}
         />
       </div>

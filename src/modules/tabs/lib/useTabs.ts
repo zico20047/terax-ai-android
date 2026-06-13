@@ -8,6 +8,7 @@ import {
   setLeafCwd as setLeafCwdInTree,
   siblingLeafOf,
   splitLeaf,
+  swapLeaves,
   type PaneNode,
   type SplitDir,
 } from "@/modules/terminal/lib/panes";
@@ -730,6 +731,19 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     [],
   );
 
+  const swapPanes = useCallback(
+    (idA: number, idB: number): void => {
+      setTabs((curr) =>
+        curr.map((t) => {
+          if (t.kind !== "terminal") return t;
+          if (!hasLeaf(t.paneTree, idA) || !hasLeaf(t.paneTree, idB)) return t;
+          return { ...t, paneTree: swapLeaves(t.paneTree, idA, idB) };
+        }),
+      );
+    },
+    [],
+  );
+
   const closePaneByLeaf = useCallback((leafId: number): void => {
     let didRemove = false;
     setTabs((curr) => {
@@ -846,6 +860,7 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     focusNextPaneInTab,
     splitActivePane,
     splitPaneByLeafId,
+    swapPanes,
     closeActivePane,
     closePaneByLeaf,
     resetWorkspace,

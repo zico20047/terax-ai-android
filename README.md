@@ -57,14 +57,17 @@ A terminal app for Android tablets and phones with bash and apt package manager.
 ## Features
 
 - **bash terminal** with coreutils
-- **apt package manager** — can you use package like termux(pkg)
-- **Touch text selection** — hold and drag to select, copy, paste (wterm DOM renderer on mobile) Coming Soon (known bugs)
-- **Extra keys bar** — CTRL, ALT, ESC, TAB, arrow keys, symbols Coming Soon (known bugs)
-- **Wake lock** — screen stays on during long-running commands Coming Soon (known feat)
+- **apt package manager** — install packages like Python, Node.js, git, etc.
+- **Split pane terminals** — split left/right or top/bottom (max 4 panes per tab)
+- **Extra keys bar** — CTRL, ALT, ESC, TAB, HOME, END, arrow keys, symbols ($, &, ;, |, ~, /, -)
+- **Touch text selection** — hold and drag to select, copy, paste
+- **Wake lock** — screen stays on during long-running commands
 - **Touch scroll** — drag to scroll through terminal history
-- **AI Chat** — OpenAI-compatible endpoints by terax AI 
-- **File Explorer** — browse shared storage
-- **Responsive UI** — tablet/phone uses desktop layout, only landscape phone uses mobile nav
+- **AI Chat** — OpenAI-compatible endpoints by terax AI
+- **File Explorer** — browse and manage files
+- **Git integration** — view changes, diffs, and history
+- **Responsive UI** — tablet uses desktop layout with sidebar, phone uses mobile nav
+- **Immersive mode** — full screen terminal, nav bar hidden
 
 ## Quick Start
 
@@ -96,19 +99,16 @@ See [Terminal Guide](docs/terminal-guide.md) for full usage.
 
 - **Beta** — expect bugs and breaking changes
 - **GPG warning** — apt shows `NO_PUBKEY` — cosmetic, packages install fine
-- **wterm on Android** — DOM renderer has limited Android support. Native touch
-  selection works but scrollback scrolling is limited. A proper fix requires a
-  terminal renderer designed for Android (like Termux's own implementation).
-- **Landscape on phones** — may show tablet/desktop layout instead of
-  mobile UI (known bug, works fine in portrait)
+- **Keyboard gap** — brief gap under extra keys when keyboard opens, hides after first keypress
+- **"Built for older Android" popup** — cosmetic, targetSdk=28 required for W^X policy (same as Termux)
 
 ## Credits
 
+- **Release APKs** — properly signed, ~36-40 MB per architecture
 - [Termux](https://termux.dev) — bootstrap binaries and package repository
 - [terax-ai](https://github.com/crynta/terax-ai) — AI development environment
 - [Tauri](https://tauri.app) — app framework
-- [xterm.js](https://xtermjs.org) — terminal emulator (mobile/desktop)
-- [wterm](https://wterm.dev/) - limitations android terminal(testing)
+- [xterm.js](https://xtermjs.org) — terminal emulator
 
 ## License
 

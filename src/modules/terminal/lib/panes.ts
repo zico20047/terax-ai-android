@@ -158,3 +158,22 @@ export function siblingLeafOf(
 export function hasLeaf(tree: PaneNode, id: PaneId): boolean {
   return leafIds(tree).includes(id);
 }
+
+export function swapLeaves(
+  tree: PaneNode,
+  idA: PaneId,
+  idB: PaneId,
+): PaneNode {
+  if (idA === idB) return tree;
+  if (isLeaf(tree)) return tree;
+  return {
+    ...tree,
+    children: tree.children.map((c) => {
+      if (isLeaf(c)) {
+        if (c.id === idA) return { ...c, id: idB };
+        if (c.id === idB) return { ...c, id: idA };
+      }
+      return swapLeaves(c, idA, idB);
+    }),
+  };
+}
