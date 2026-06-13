@@ -111,12 +111,29 @@ jobs:
             -o src-tauri/gen/android/app/src/main/jniLibs/${{ matrix.abi }}/libterax-path-translate.so \
             src-tauri/src/modules/path-translate/path-translate.c
 
+      - name: Generate release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TERAX_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.TERAX_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TERAX_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.TERAX_KEY_PASSWORD }}
+        run: |
+          KEYSTORE_PATH="src-tauri/gen/android/app/terax-release.keystore"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
+          cat > src-tauri/gen/android/local.properties << EOF
+          TERAX_STORE_PASSWORD=$STORE_PASSWORD
+          TERAX_KEY_ALIAS=$KEY_ALIAS
+          TERAX_KEY_PASSWORD=$KEY_PASSWORD
+          EOF
+
       - name: Build APK
-        run: pnpm tauri android build --debug --apk --target ${{ matrix.tauri_target }}
+        run: pnpm tauri android build --apk --target ${{ matrix.tauri_target }}
 
       - name: Rename APK
         run: |
-          cp src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
+          APK_DIR="src-tauri/gen/android/app/build/outputs/apk/universal/release"
+          APK=$(find "$APK_DIR" -name "*.apk" | head -1)
+          cp "$APK" \
             terax-android-${{ github.ref_name || 'testing' }}-${{ matrix.apk_suffix }}.apk
 
       - name: Upload artifact
