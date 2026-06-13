@@ -1505,8 +1505,9 @@ export default function App() {
               onNewGitGraph={openGitGraphFromContext}
               onClose={handleClose}
               onPin={pinTab}
+              onOpenSettings={() => void openSettingsWindow()}
             />
-          ) : (
+          ) : !IS_MOBILE ? (
             <Header
               tabs={tabs}
               activeId={activeId}
@@ -1530,7 +1531,7 @@ export default function App() {
               searchTarget={searchTarget}
               searchRef={searchInlineRef}
             />
-          )}
+          ) : null}
 
           <main className="zoom-content flex min-h-0 flex-1 flex-col">
             {isPhone ? (
@@ -1608,6 +1609,7 @@ export default function App() {
                         onNewGitGraph={openGitGraphFromContext}
                         onClose={handleClose}
                         onPin={pinTab}
+                        onOpenSettings={() => void openSettingsWindow()}
                         isTablet
                       />
                     )}
@@ -1621,11 +1623,6 @@ export default function App() {
                         visible={isTerminalTab}
                         selectionMode={selectionMode}
                         onToggleSelectionMode={() => setSelectionMode((s) => !s)}
-                        onOpenSettings={
-                          IS_MOBILE && !isPhone
-                            ? () => setShowSettingsOverlay((s) => !s)
-                            : undefined
-                        }
                         isTablet={IS_MOBILE && !isPhone}
                       />
                     )}
@@ -1657,29 +1654,29 @@ export default function App() {
             )}
           </main>
 
-          {!isPhone ? (
-            !IS_MOBILE ? (
-              <StatusBar
-                cwd={activeCwd}
-                filePath={activeFilePath}
-                home={home}
-                onCd={sendCd}
-                onWorkspaceChange={switchWorkspace}
-                onOpenMini={openMini}
+          {isPhone ? (
+            !isKeyboardOpen ? (
+              <MobileBottomNav
+                activeTab={mobileNavTab}
+                onSelectTab={setMobileNavTab}
+                changedCount={sourceControl.changedCount}
                 hasComposer={hasComposer}
-                privateActive={
-                  activeTab?.kind === "terminal" && activeTab.private === true
-                }
               />
             ) : null
-          ) : !isKeyboardOpen ? (
-            <MobileBottomNav
-              activeTab={mobileNavTab}
-              onSelectTab={setMobileNavTab}
-              changedCount={sourceControl.changedCount}
+          ) : (
+            <StatusBar
+              cwd={activeCwd}
+              filePath={activeFilePath}
+              home={home}
+              onCd={sendCd}
+              onWorkspaceChange={switchWorkspace}
+              onOpenMini={openMini}
               hasComposer={hasComposer}
+              privateActive={
+                activeTab?.kind === "terminal" && activeTab.private === true
+              }
             />
-          ) : null}
+          )}
 
           {isPhone ? (
             <>

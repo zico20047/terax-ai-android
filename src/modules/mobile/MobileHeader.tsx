@@ -18,6 +18,7 @@ import {
   GitCommitIcon,
   MoreVerticalCircle01Icon,
   PinIcon,
+  Settings02Icon,
 } from "@hugeicons/core-free-icons";
 import { useRef } from "react";
 
@@ -32,6 +33,7 @@ type Props = {
   onNewGitGraph: () => void;
   onClose: (id: number) => void;
   onPin: (id: number) => void;
+  onOpenSettings?: () => void;
   isTablet?: boolean;
 };
 
@@ -66,6 +68,7 @@ export function MobileHeader({
   onNewGitGraph,
   onClose,
   onPin,
+  onOpenSettings,
   isTablet,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -183,6 +186,11 @@ export function MobileHeader({
           <DropdownMenuItem onSelect={onNewGitGraph}>
             <HugeiconsIcon icon={GitCommitIcon} size={14} strokeWidth={1.75} />
             <span>Git History</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onOpenSettings}>
+            <HugeiconsIcon icon={Settings02Icon} size={14} strokeWidth={1.75} />
+            <span>Settings</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
